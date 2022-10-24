@@ -1,0 +1,12 @@
+#latitude-icon {
+	width: 75px;
+    position: relative;
+    display: inline-block;
+    top: 0px;
+    left: 10px;
+    vertical-align: middle;
+}
+
+.hide {
+    display: none !important;
+}

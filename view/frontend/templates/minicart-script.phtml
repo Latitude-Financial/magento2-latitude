@@ -1,0 +1,15 @@
+<?php
+/**
+ * @package   LatitudeNew_Payment
+ * @author    Lpay Team <integrationsupport@latitudefinancial.com>
+ * UNUSED
+ */
+?>
+<script>
+	require([
+	     'Magento_Customer/js/customer-data'
+	 ], function (customerData) {
+	     var sections = ['cart'];
+	     customerData.invalidate(sections); //might be the one causing cart page to misbehave
+	});
+</script>

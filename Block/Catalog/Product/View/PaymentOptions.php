@@ -103,6 +103,12 @@ class PaymentOptions extends \Magento\Framework\View\Element\Template
     {
         if ($methodCode)
         {
+            if ($methodCode === 'latitude' && !$this->helper->isLCEnabled())
+                return 0;
+
+            if (($methodCode === 'latitudepay' || $methodCode === 'genoapay') && !$this->helper->isLatitudepayEnabled() && !$this->helper->isGenoapayEnabled())
+                return 0;
+                
             return $this->helper->getConfigData('show_on_pdp', null, $methodCode);
         }
 

@@ -21,14 +21,19 @@ Tested up to: Magento 2.4.5.
 
 ## Changelog
 
+### 3.0.1
+- 28 October 2022
+- Fix widget still showing when LC is disabled
+- Fix PHP syntax compatibility issue with versions < 7.3 
+
+<details>
+<summary>Older versions</summary>
+
 ### 3.0.0
 - 18 October 2022
 - Compatibility with Magento 2.4.5
 - Integration of Latitude Interest Free and GEM
 - Upgrade Schema Implementation
-
-<details>
-<summary>Older versions</summary>
 
 ### 2.0.7
 - 19 July 2022

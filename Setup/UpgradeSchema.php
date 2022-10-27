@@ -52,7 +52,7 @@ class UpgradeSchema implements \Magento\Framework\Setup\UpgradeSchemaInterface
         $this->helper->log($statusTable ? 'sales_order_status_state exists' : 'sales_order_status_state doesn\'t exists');
 
         $installer->startSetup();
-        if (version_compare($context->getVersion(), '3.0.0', '<')) {
+        if (version_compare($context->getVersion(), '3.0.1', '<')) {
             $this->helper->log('*** LATITUDEPAY UPGRADE - version below 3.0.0, adding new status... ***');
 
             try{
@@ -112,7 +112,7 @@ class UpgradeSchema implements \Magento\Framework\Setup\UpgradeSchemaInterface
                             [
                                 'is_default' => 0
                             ],
-                            "state='new'&status='pending_latitude_approval'",
+                            "state='new'&status='pending_latitude_approval'"
                         );
                 }
                 else{

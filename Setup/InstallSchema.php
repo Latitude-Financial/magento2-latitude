@@ -17,6 +17,8 @@ class InstallSchema implements \Magento\Framework\Setup\InstallSchemaInterface
 
     protected $helper;
 
+    const ERROR_CODE_DUPLICATE_ENTRY = 1062;
+
     /**
      * Construct
      *

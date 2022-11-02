@@ -53,7 +53,7 @@ class UpgradeSchema implements \Magento\Framework\Setup\UpgradeSchemaInterface
 
         $installer->startSetup();
         if (version_compare($context->getVersion(), '3.0.1', '<')) {
-            $this->helper->log('*** LATITUDEPAY UPGRADE - version below 3.0.0, adding new status... ***');
+            $this->helper->log('*** LATITUDEPAY UPGRADE - version below 3.0.1, adding new status... ***');
 
             try{
                 // Insert statuses

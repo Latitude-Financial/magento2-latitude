@@ -52,34 +52,70 @@ class InstallSchema implements \Magento\Framework\Setup\InstallSchemaInterface
 
         $installer->startSetup();
 
-        // Insert statuses
-        $installer->getConnection()->insertArray(
-            $statusTable,
-            [
-                'status',
-                'label'
-            ],
-            [
-                ['status' => 'pending_latitude_approval', 'label' => 'Pending Latitude Approval']
-            ]
-        );
-         
-        // Insert states and mapping of statuses to states
-        $installer->getConnection()->insertArray(
-            $statusStateTable,
-            [
-                'status',
-                'state',
-                'is_default'
-            ],
-            [
+        try{
+            // Insert statuses
+            $installer->getConnection()->insertArray(
+                $statusTable,
                 [
-                    'status' => 'pending_latitude_approval',
-                    'state' => 'new',
-                    'is_default' => 0
+                    'status',
+                    'label'
+                ],
+                [
+                    ['status' => 'pending_latitude_approval', 'label' => 'Pending Latitude Approval']
                 ]
-            ]
-        );
+            );
+        }
+        catch(\Exception $e){
+            $this->helper->log('Status Exists - '.$e->getCode().' trying update...');
+            if ($e->getCode() === self::ERROR_CODE_DUPLICATE_ENTRY) 
+            {
+                    $installer->getConnection()->update(
+                        $statusTable,
+                        [
+                            'label' => 'Pending Latitude Approval'
+                        ],
+                        "status='pending_latitude_approval'"
+                    );
+            }
+            else{
+                throw $e;
+            }
+        }
+        
+        try{
+            // Insert states and mapping of statuses to states
+            $installer->getConnection()->insertArray(
+                $statusStateTable,
+                [
+                    'status',
+                    'state',
+                    'is_default'
+                ],
+                [
+                    [
+                        'status' => 'pending_latitude_approval',
+                        'state' => 'new',
+                        'is_default' => 0
+                    ]
+                ]
+            );
+        }
+        catch(\Exception $e){
+            $this->helper->log('Status State Exists - '.$e->getCode().' trying update...');
+            if ($e->getCode() === self::ERROR_CODE_DUPLICATE_ENTRY) 
+            {
+                    $installer->getConnection()->update(
+                        $statusStateTable,
+                        [
+                            'is_default' => 0
+                        ],
+                        "state='new'&status='pending_latitude_approval'"
+                    );
+            }
+            else{
+                throw $e;
+            }
+        }
 
         $installer->endSetup();
     }

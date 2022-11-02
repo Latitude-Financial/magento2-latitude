@@ -21,13 +21,17 @@ Tested up to: Magento 2.4.5.
 
 ## Changelog
 
+### 3.0.2
+- 2 November 2022
+- Add try catch to Install Schema to avoid adding existing value to DB
+
+<details>
+<summary>Older versions</summary>
+
 ### 3.0.1
 - 28 October 2022
 - Fix widget still showing when LC is disabled
 - Fix PHP syntax compatibility issue with versions < 7.3 
-
-<details>
-<summary>Older versions</summary>
 
 ### 3.0.0
 - 18 October 2022

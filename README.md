@@ -21,12 +21,16 @@ Tested up to: Magento 2.4.5.
 
 ## Changelog
 
-### 3.0.2
-- 2 November 2022
-- Add try catch to Install Schema to avoid adding existing value to DB
+### 3.0.3
+- 4 November 2022
+- Sanitize DOB for LatitudePay/Genoapay API
 
 <details>
 <summary>Older versions</summary>
+
+### 3.0.2
+- 2 November 2022
+- Add try catch to Install Schema to avoid adding existing value to DB
 
 ### 3.0.1
 - 28 October 2022

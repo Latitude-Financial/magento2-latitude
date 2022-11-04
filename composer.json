@@ -2,7 +2,7 @@
     "name": "lfs/payment",
     "description": "Latitude Payment Plugin offering 3-in-1 integration with Interest Free, LatitudePay, and Genoapay",
     "type": "magento2-module",
-    "version": "3.0.2",
+    "version": "3.0.3",
     "license": [
         "OSL-3.0",
         "AFL-3.0"

@@ -52,8 +52,8 @@ class UpgradeSchema implements \Magento\Framework\Setup\UpgradeSchemaInterface
         $this->helper->log($statusTable ? 'sales_order_status_state exists' : 'sales_order_status_state doesn\'t exists');
 
         $installer->startSetup();
-        if (version_compare($context->getVersion(), '3.0.2', '<')) {
-            $this->helper->log('*** LATITUDEPAY UPGRADE - version below 3.0.2, adding new status... ***');
+        if (version_compare($context->getVersion(), '3.0.3', '<')) {
+            $this->helper->log('*** LATITUDEPAY UPGRADE - version below 3.0.3, adding new status... ***');
 
             try{
                 // Insert statuses

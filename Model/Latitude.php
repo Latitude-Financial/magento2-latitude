@@ -160,11 +160,16 @@ class Latitude extends \Magento\Payment\Model\Method\AbstractMethod
         $transId = $payment->getParentTransactionId();
         $gatewayReference = $payment->getAdditionalInformation('gateway_reference');
 
-        if (!$transId)
+        if ($order->getStatus() !== \Magento\Sales\Model\Order::STATE_PENDING_PAYMENT && $order->getStatus() !== \Magento\Sales\Model\Order::STATE_PROCESSING && $order->getStatus() !== 'pending_latitude_approval'){
+            //in case status is not pending approval, processing (partially captured) or pending payment
+            throw new \Magento\Framework\Exception\LocalizedException(
+                __('Invalid capture scenario - cannot capture order with status '.$order->getStatus())
+            );
+        }
+
+        if (!$transId){
             return $this; //in case instant
-            // throw new \Magento\Framework\Exception\LocalizedException(
-            //     __('Error capturing payment - no Transaction Id')
-            // );
+        }
 
         if (!$gatewayReference)
             throw new \Magento\Framework\Exception\LocalizedException(

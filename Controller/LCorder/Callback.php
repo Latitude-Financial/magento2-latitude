@@ -337,7 +337,7 @@ class Callback extends \Magento\Framework\App\Action\Action
                         }
                     }
                     else if ($verifyResponse->transactionType === 'authorization' && $order->getStatus() === 'pending_latitude_approval'){
-                        $this->helper->log('****** LC SUCCESS INSTANT/SALE ******', 'latitude');
+                        $this->helper->log('****** LC SUCCESS DEFERRED ******', 'latitude');
                         $this->saveDeferredTransaction($order, $verifyResponse);
                         if ($order) {
                             //update session's quote and order info

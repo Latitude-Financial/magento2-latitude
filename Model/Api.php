@@ -74,16 +74,16 @@ class Api extends \Magento\Framework\Model\AbstractModel
 
         $options = array(
             CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_ENCODING => "",
-            CURLOPT_MAXREDIRS => 10,
-            CURLOPT_TIMEOUT => 30,
-            CURLOPT_HTTP_VERSION =>CURL_HTTP_VERSION_1_1
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_MAXREDIRS      => 10,
+            CURLOPT_TIMEOUT        => 30
         );
 
         $headers = [
             'Accept' => $this->contentType,
             'Content-Type' => $this->contentType,
-            "Cache-Control" => "no-cache"
+            "Cache-Control" => "no-cache",
+            'Expected' => ''
         ];
 
         $url = "$gatewayUrl/token";
@@ -266,10 +266,9 @@ class Api extends \Magento\Framework\Model\AbstractModel
 
             $options = array(
                 CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_ENCODING       => "",
+                CURLOPT_FOLLOWLOCATION => true,
                 CURLOPT_MAXREDIRS      => 10,
-                CURLOPT_TIMEOUT        => 30,
-                CURLOPT_HTTP_VERSION   => CURL_HTTP_VERSION_1_1
+                CURLOPT_TIMEOUT        => 30
             );
 
             $headers = [
@@ -278,6 +277,7 @@ class Api extends \Magento\Framework\Model\AbstractModel
                 'Cache-Control' => 'no-cache',
                 'X-Idempotency-Key' => uniqid('', true),
                 'Authorization' => 'Bearer '.$authToken,
+                'Expected' => ''
             ];
 
             
@@ -336,10 +336,9 @@ class Api extends \Magento\Framework\Model\AbstractModel
 
         $options = array(
             CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_ENCODING       => "",
+            CURLOPT_FOLLOWLOCATION => true,
             CURLOPT_MAXREDIRS      => 10,
-            CURLOPT_TIMEOUT        => 30,
-            CURLOPT_HTTP_VERSION   => CURL_HTTP_VERSION_1_1
+            CURLOPT_TIMEOUT        => 30
         );
 
         $headers = [
@@ -348,6 +347,7 @@ class Api extends \Magento\Framework\Model\AbstractModel
             'Cache-Control' => 'no-cache',
             'X-Idempotency-Key' => uniqid('', true),
             'Authorization' => 'Bearer '.$authToken,
+            'Expected' => ''
         ];
         
         $response = $this->helper->makecurlCall($url, $options, $headers, false, $bodyStr);
@@ -385,10 +385,9 @@ class Api extends \Magento\Framework\Model\AbstractModel
 
         $options = array(
             CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_ENCODING       => "",
+            CURLOPT_FOLLOWLOCATION => true,
             CURLOPT_MAXREDIRS      => 10,
-            CURLOPT_TIMEOUT        => 30,
-            CURLOPT_HTTP_VERSION   => CURL_HTTP_VERSION_1_1
+            CURLOPT_TIMEOUT        => 30
         );
 
         $headers = [
@@ -396,6 +395,7 @@ class Api extends \Magento\Framework\Model\AbstractModel
             'Content-Type' => $this->contentType,
             'Cache-Control' => 'no-cache',
             'Authorization' => 'Bearer '.$authToken,
+            'Expected' => ''
         ];
         
         $response = $this->helper->makecurlCall($url, $options, $headers, false, null, false);
@@ -510,15 +510,15 @@ class Api extends \Magento\Framework\Model\AbstractModel
 
             $options = array(
                 CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_ENCODING       => "",
+                CURLOPT_FOLLOWLOCATION => true,
                 CURLOPT_MAXREDIRS      => 10,
-                CURLOPT_TIMEOUT        => 30,
-                CURLOPT_HTTP_VERSION   => CURL_HTTP_VERSION_1_1
+                CURLOPT_TIMEOUT        => 30
             );
 
             $headers = [
                 'Content-Type' => 'application/json',
                 'Authorization' => 'Basic ' . base64_encode("$merchantId:$merchantSk"),
+                'Expected' => ''
             ];
 
             $response = $this->helper->makecurlCall($url, $options, $headers, false, $bodyStr, true, 'latitude');
@@ -576,15 +576,15 @@ class Api extends \Magento\Framework\Model\AbstractModel
 
         $options = array(
             CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_ENCODING       => "",
+            CURLOPT_FOLLOWLOCATION => true,
             CURLOPT_MAXREDIRS      => 10,
-            CURLOPT_TIMEOUT        => 30,
-            CURLOPT_HTTP_VERSION   => CURL_HTTP_VERSION_1_1
+            CURLOPT_TIMEOUT        => 30
         );
 
         $headers = [
             'Content-Type' => 'application/json',
             'Authorization' => 'Basic ' . base64_encode("$merchantId:$merchantSk"),
+            'Expected' => ''
         ];
 
         $response = $this->helper->makecurlCall($url, $options, $headers, false, $bodyStr, true, 'latitude');
@@ -621,15 +621,15 @@ class Api extends \Magento\Framework\Model\AbstractModel
     
         $options = array(
             CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_ENCODING       => "",
+            CURLOPT_FOLLOWLOCATION => true,
             CURLOPT_MAXREDIRS      => 10,
-            CURLOPT_TIMEOUT        => 30,
-            CURLOPT_HTTP_VERSION   => CURL_HTTP_VERSION_1_1
+            CURLOPT_TIMEOUT        => 30
         );
     
         $headers = [
             'Content-Type' => 'application/json',
             'Authorization' => 'Basic ' . base64_encode("$merchantId:$merchantSk"),
+            'Expected' => ''
         ];
         
         $response = $this->helper->makecurlCall($url, $options, $headers, false, $bodyStr, true, 'latitude');
@@ -683,15 +683,15 @@ class Api extends \Magento\Framework\Model\AbstractModel
     
         $options = array(
             CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_ENCODING       => "",
+            CURLOPT_FOLLOWLOCATION => true,
             CURLOPT_MAXREDIRS      => 10,
-            CURLOPT_TIMEOUT        => 30,
-            CURLOPT_HTTP_VERSION   => CURL_HTTP_VERSION_1_1
+            CURLOPT_TIMEOUT        => 30
         );
     
         $headers = [
             'Content-Type' => 'application/json',
             'Authorization' => 'Basic ' . base64_encode("$merchantId:$merchantSk"),
+            'Expected' => ''
         ];
         
         $response = $this->helper->makecurlCall($url, $options, $headers, false, $bodyStr, true, 'latitude');
@@ -745,15 +745,15 @@ class Api extends \Magento\Framework\Model\AbstractModel
     
         $options = array(
             CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_ENCODING       => "",
+            CURLOPT_FOLLOWLOCATION => true,
             CURLOPT_MAXREDIRS      => 10,
-            CURLOPT_TIMEOUT        => 30,
-            CURLOPT_HTTP_VERSION   => CURL_HTTP_VERSION_1_1
+            CURLOPT_TIMEOUT        => 30
         );
     
         $headers = [
             'Content-Type' => 'application/json',
             'Authorization' => 'Basic ' . base64_encode("$merchantId:$merchantSk"),
+            'Expected' => ''
         ];
         
         $response = $this->helper->makecurlCall($url, $options, $headers, false, $bodyStr, true, 'latitude');

@@ -21,13 +21,17 @@ Tested up to: Magento 2.4.5.
 
 ## Changelog
 
+### 3.0.5
+- 16 November 2022
+- update curl and header options
+
+<details>
+<summary>Older versions</summary>
+
 ### 3.0.4
 - 10 November 2022
 - Fixed logging typo
 - Added capture condition
-
-<details>
-<summary>Older versions</summary>
 
 ### 3.0.3
 - 4 November 2022

@@ -69,7 +69,6 @@ class Payment extends \Magento\Config\Block\System\Config\Form\Fieldset
         return $isPaymentEnabled;
     }
 
-
     /**
      * Return header comment part of html for payment solution
      *
@@ -77,9 +76,7 @@ class Payment extends \Magento\Config\Block\System\Config\Form\Fieldset
      * @return string
      * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
-    // @codingStandardsIgnoreStart
     protected function _getHeaderCommentHtml($element)
-    // @codingStandardsIgnoreEnd
     {
         return '';
     }
@@ -91,21 +88,19 @@ class Payment extends \Magento\Config\Block\System\Config\Form\Fieldset
      * @return false
      * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
-    // @codingStandardsIgnoreStart
     protected function _isCollapseState($element)
-   // @codingStandardsIgnoreEnd
     {
         return false;
     }
 
     /**
+     * Get script for fieldset css behaviour
+     * 
      * @param \Magento\Framework\Data\Form\Element\AbstractElement $element
      * @return string
      * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
-    // @codingStandardsIgnoreStart
     protected function _getExtraJs($element)
-     // @codingStandardsIgnoreEnd
     {
         $script = "require(['jquery', 'prototype'], function(jQuery){
             window.latitudepayToggleSolution = function (id, url) {

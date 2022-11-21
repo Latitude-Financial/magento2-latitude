@@ -32,10 +32,11 @@ class InstructionsConfigProvider implements ConfigProviderInterface
      */
     protected $methods = [];
 
-     /**
+    /**
      * @var \Magento\Framework\App\Config\ScopeConfigInterface
      */
     protected $scopeConfig;
+
     /**
      * @var Repository
      */
@@ -56,10 +57,11 @@ class InstructionsConfigProvider implements ConfigProviderInterface
      */
     protected $escaper;
 
-     /**
+    /**
      * @var \Magento\Checkout\Model\Cart
      */
     protected $cart;
+
     /**
      * @var \Magento\Framework\Pricing\PriceCurrencyInterface
      */
@@ -70,15 +72,19 @@ class InstructionsConfigProvider implements ConfigProviderInterface
      */
     protected $paymentHelper;
 
-    /** @var LayoutInterface  */
-
+    /**
+     * @var LayoutInterface
+     * */
     protected $layout;
 
+    /**
+     * @var \Magento\Directory\Model\Currency
+     */
     protected $currency;
 
     /**
      * Construct
-     *    
+     * 
      * @param PaymentHelper $paymentHelper
      * @param Escaper $escaper
      * @param \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig
@@ -89,6 +95,7 @@ class InstructionsConfigProvider implements ConfigProviderInterface
      * @param \Magento\Checkout\Model\Cart $cart,
      * @param \Magento\Framework\Pricing\PriceCurrencyInterface $priceCurrency,
      * @param LayoutInterface $layout
+     * @param \Magento\Directory\Model\Currency $currency
      */
     public function __construct(
         PaymentHelper $paymentHelper,
@@ -120,29 +127,32 @@ class InstructionsConfigProvider implements ConfigProviderInterface
                 $this->methods[$code] = $this->paymentHelper->getMethodInstance($code);
             } catch (LocalizedException $e) {
                 $this->helper->log($e->getMessage());
-            }       
-         }
+            }
+        }
     }
 
     /**
-     * {@inheritdoc}
+     * @inheritdoc
      */
     public function getConfig()
     {
-        $lpayinstallmentBlockId = "latitude_installment_block";
-        $gpayinstallmentBlockId = "genoapay_installment_block";
+        $lpayinstallmentBlock = '<img class="lpay_snippet" src="'.$this->getSnippetImage().'" alt="LatitudePay" >';
+        $gpayinstallmentBlock = '<img class="lpay_snippet" src="'.$this->getSnippetImage().'" alt="GenoaPay" >';
+        $lcLogoUrl = 'https://resources.latitudefinancial.com/img/interest-free/logos/';
+        $lcLogoFileName = $this->helper->getStoreCurrency() === 'AUD' ? 'lfs-lock-up.svg' : 'GEM-IF-LOGO.svg';
+
         /** @noinspection PhpUndefinedMethodInspection */
         /** @noinspection PhpUndefinedMethodInspection */
         $config = [
             'latitudepayments' => [
                 'latitudepay' => $this->getViewFileUrl('LatitudeNew_Payment::images/latitudepay-logo.svg'),
                 'genoapay' => $this->getViewFileUrl('LatitudeNew_Payment::images/genoapay-logo.svg'),
-                'latitude' => 'https://resources.latitudefinancial.com/img/interest-free/logos/' . ($this->helper->getStoreCurrency() === 'AUD' ? 'lfs-lock-up.svg' : 'GEM-IF-LOGO.svg'),
+                'latitude' =>  $lcLogoUrl.$lcLogoFileName,
                 'installmentno' => $this->getInstallmentNo(),
                 'currency_symbol' => $this->currency->getCurrencySymbol(),
                 'utilJs' => $this->helper->getUtilJs(),
-                'lpay_installment_block' => '<img class="lpay_snippet" src="'.$this->getSnippetImage().'" alt="LatitudePay" >',
-                'gpay_installment_block'    => '<img class="lpay_snippet" src="'.$this->getSnippetImage().'" alt="GenoaPay" >',
+                'lpay_installment_block' => $lpayinstallmentBlock,
+                'gpay_installment_block'    => $gpayinstallmentBlockId,
                 'lc_script' => $this->helper->getScriptURL(),
                 'lc_options' => [
                     "merchantId" => $this->helper->getConfigData('merchant_id', null, 'latitude'),
@@ -161,7 +171,7 @@ class InstructionsConfigProvider implements ConfigProviderInterface
         return $config;
     }
 
-     /**
+    /**
      * Return redirect URL for method
      *
      * @param string $code
@@ -205,6 +215,7 @@ class InstructionsConfigProvider implements ConfigProviderInterface
 
     /**
      * Retrieve Snippet Image
+     * 
      * @throws \Magento\Framework\Exception\LocalizedException
      * @return \Magento\Framework\Phrase
      */

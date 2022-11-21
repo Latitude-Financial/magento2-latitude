@@ -7,13 +7,10 @@ namespace LatitudeNew\Payment\Model\Adminhtml\Source;
 
 use \Magento\Framework\Data\OptionSourceInterface;
 
-/**
- * Class Environment
- */
 class Environment implements OptionSourceInterface
 {
-    const LATITUDE_ENVIRONMENT_PRODUCTION = 'production';
-    const LATITUDE_ENVIRONMENT_SANDBOX = 'sandbox';
+    protected const LATITUDE_ENVIRONMENT_PRODUCTION = 'production';
+    protected const LATITUDE_ENVIRONMENT_SANDBOX = 'sandbox';
 
     /**
      * Possible environment types

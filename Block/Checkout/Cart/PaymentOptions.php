@@ -11,6 +11,7 @@
 namespace LatitudeNew\Payment\Block\Checkout\Cart;
 
 use \Magento\Catalog\Block\Product\Context;
+
 /**
  * PaymentOptions block
  *
@@ -39,7 +40,7 @@ class PaymentOptions extends \Magento\Framework\View\Element\Template
         \Magento\Checkout\Model\Cart $cart,
         \LatitudeNew\Payment\Helper\Data $helper,
         array $data = []
-        ) {
+    ) {
         $this->cart  = $cart;
         $this->helper  = $helper;
         parent::__construct(
@@ -50,6 +51,7 @@ class PaymentOptions extends \Magento\Framework\View\Element\Template
 
     /**
      * Gets Installment amount for current product
+     * 
      * @return string
      * @throws \Magento\Framework\Exception\LocalizedException
      */
@@ -60,37 +62,45 @@ class PaymentOptions extends \Magento\Framework\View\Element\Template
     }
 
     /**
+     * Whether to show snippet on cart page
+     * 
      * @throws \Magento\Framework\Exception\LocalizedException
      * @param string $methodCode
      * @return bool
      */
-    public function showOnCart($methodCode=null)
+    public function showOnCart($methodCode = null)
     {
-        if ($methodCode)
-        {
+        $lpayEnabled = $this->helper->isLatitudepayEnabled();
+        $gpayEnabled = $this->helper->isGenoapayEnabled();
+
+        if ($methodCode) {
             if ($methodCode === 'latitude' && !$this->helper->isLCEnabled())
                 return 0;
 
-            if (($methodCode === 'latitudepay' || $methodCode === 'genoapay') && !$this->helper->isLatitudepayEnabled() && !$this->helper->isGenoapayEnabled())
+            if (($methodCode === 'latitudepay' || $methodCode === 'genoapay') && !$lpayEnabled && !$gpayEnabled) {
                 return 0;
-                
+            }
+            
             return $this->helper->getConfigData('show_on_cart', null, $methodCode);
         }
 
-        if (!$this->helper->isLatitudepayEnabled() && !$this->helper->isGenoapayEnabled())
+        if (!$this->helper->isLatitudepayEnabled() && !$this->helper->isGenoapayEnabled()) {
             return 0;
-            
-        return $this->helper->getConfigData('show_on_cart'); //based on whatever's active (depending on store's currency setting)
+        }
+
+        //based on whatever's active (depending on store's currency setting)
+        return $this->helper->getConfigData('show_on_cart');
     }
 
     /**
      * Retrieve Snippet Image
+     * 
      * @throws \Magento\Framework\Exception\LocalizedException
      * @return \Magento\Framework\Phrase
      */
     public function getSnippetImage()
     {
-        /** @noinspection PhpUndefinedMethodInspection */
+        /* @noinspection PhpUndefinedMethodInspection */
         $param = [
             'amount' => $this->getAmount(),
             'services' => $this->helper->getLatitudepayPaymentServices(),
@@ -102,15 +112,21 @@ class PaymentOptions extends \Magento\Framework\View\Element\Template
 
     /**
      * Retrieve util js
+     * 
      * @throws \Magento\Framework\Exception\LocalizedException
      * @return \Magento\Framework\Phrase
      */
     public function getUtilJs()
     {
-        /** @noinspection PhpUndefinedMethodInspection */
+        /* @noinspection PhpUndefinedMethodInspection */
         return $this->helper->getUtilJs();
     }
 
+    /**
+     * Get options for LC widget
+     * 
+     * @param string $page
+     */
     public function getLCOptions($page)
     {
         return json_encode([
@@ -122,7 +138,7 @@ class PaymentOptions extends \Magento\Framework\View\Element\Template
             "layout" => $this->helper->getConfigData('layout', null, 'latitude'),
             "paymentOption" => $this->helper->getConfigData('plan_type', null, 'latitude'),
             "promotionMonths" => $this->helper->getConfigData('plan_period', null, 'latitude'),
-            "minAmount" => $this->helper->getConfigData('minimum_amount', null, 'latitude'), 
+            "minAmount" => $this->helper->getConfigData('minimum_amount', null, 'latitude'),
             "product" => [
                 "id" => 'cart',
                 "name" =>  'cart',
@@ -133,30 +149,39 @@ class PaymentOptions extends \Magento\Framework\View\Element\Template
         ]);
     }
 
+    /**
+     * Retrieve LC's merchant ID
+     */
     public function getLCMerchantID()
     {
-       return $this->helper->getConfigData('merchant_id', null, 'latitude');
+        return $this->helper->getConfigData('merchant_id', null, 'latitude');
     }
 
+    /**
+     * Retrieve LC's base API url
+     */
     public function getLCHost()
     {
         $isTest = (boolean)($this->helper->getConfigData('test_mode', null, 'latitude') === '1');
-        return $isTest ? 
-            'https://develop.checkout.dev.merchant-services-np.lfscnp.com' 
-            : 
+
+        return $isTest ?
+            'https://develop.checkout.dev.merchant-services-np.lfscnp.com'
+            :
             'https://checkout.latitudefinancial.com';
     }
 
     /**
      * Retrieve Block Html
+     * 
      * @throws \Magento\Framework\Exception\LocalizedException
      * @return string
      */
     public function _toHtml()
     {
-        if($this->helper->isLatitudepayEnabled() || $this->helper->isGenoapayEnabled() || $this->helper->isLCEnabled()){
+        if ($this->helper->isLatitudepayEnabled() || $this->helper->isGenoapayEnabled() || $this->helper->isLCEnabled()) {
             return parent::_toHtml();
         }
+
         return '';
     }
 }

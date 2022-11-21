@@ -11,25 +11,24 @@
 namespace LatitudeNew\Payment\Block\Catalog\Product\View;
 
 use \Magento\Catalog\Block\Product\Context;
+
 /**
- * PaymentOptions block
- *
+ * Payment Options block
  */
 class PaymentOptions extends \Magento\Framework\View\Element\Template
 {
     /**
      * Core registry
-     *
+     * 
      * @var \Magento\Framework\Registry
      */
     protected $coreRegistry;
 
     /**
      *Product model
-     *
+     * 
      * @var \Magento\Catalog\Model\Product
      */
-
     protected $product;
 
     /**
@@ -37,12 +36,19 @@ class PaymentOptions extends \Magento\Framework\View\Element\Template
      */
     protected $priceCurrency;
 
+    /**
+     * @var \LatitudeNew\Payment\Helper\Data
+     */
     protected $helper;
 
-    const INSTALLMENT_NO = 10;
+    /**
+     * @var int
+     */
+    protected const INSTALLMENT_NO = 10;
 
     /**
      * PaymentOptions constructor.
+     * 
      * @param Context $context
      * @param \Magento\Framework\Pricing\PriceCurrencyInterface $priceCurrency
      * @param \LatitudeNew\Payment\Helper\Data $helper
@@ -53,7 +59,7 @@ class PaymentOptions extends \Magento\Framework\View\Element\Template
         \Magento\Framework\Pricing\PriceCurrencyInterface $priceCurrency,
         \LatitudeNew\Payment\Helper\Data $helper,
         array $data = []
-        ) {
+    ) {
         $this->coreRegistry  = $context->getRegistry();
         $this->priceCurrency = $priceCurrency;
         $this->helper  = $helper;
@@ -62,21 +68,23 @@ class PaymentOptions extends \Magento\Framework\View\Element\Template
             $data
         );
     }
+
     /**
+     * Get current product info
+     * 
      * @return mixed
      */
     public function getCurrentProduct()
     {
-
-        if($this->product == null) {
+        if ($this->product == null) {
             $this->product = $this->coreRegistry->registry('current_product');
         }
         return $this->product;
-
     }
 
     /**
      * Gets Installment amount for current product
+     * 
      * @return string
      * @throws \Magento\Framework\Exception\LocalizedException
      */
@@ -85,47 +93,59 @@ class PaymentOptions extends \Magento\Framework\View\Element\Template
         $amountPerInstallment ='';
         $totalAmount = $this->getCurrentProduct()->getFinalPrice();
         $InstallmentNo = $this->helper->getConfigData('installment_no');
-        if($InstallmentNo){
+        
+        if ($InstallmentNo) {
             $curInstallment = $InstallmentNo;
         }
-        if($curInstallment){
+
+        if ($curInstallment) {
             $amountPerInstallment = $totalAmount;
         }
+
         return $amountPerInstallment;
     }
 
-     /**
+    /**
+     * Whether to show snippet on PDP
+     * 
      * @throws \Magento\Framework\Exception\LocalizedException
      * @param string $methodCode
      * @return bool
      */
     public function showOnPDP($methodCode = null)
     {
-        if ($methodCode)
-        {
-            if ($methodCode === 'latitude' && !$this->helper->isLCEnabled())
-                return 0;
+        $lpayEnabled = $this->helper->isLatitudepayEnabled();
+        $gpayEnabled = $this->helper->isGenoapayEnabled();
 
-            if (($methodCode === 'latitudepay' || $methodCode === 'genoapay') && !$this->helper->isLatitudepayEnabled() && !$this->helper->isGenoapayEnabled())
+        if ($methodCode) {
+            if ($methodCode === 'latitude' && !$this->helper->isLCEnabled()) {
                 return 0;
-                
+            }
+
+            if (($methodCode === 'latitudepay' || $methodCode === 'genoapay') && !$lpayEnabled && !$gpayEnabled) {
+                return 0;
+            }
+
             return $this->helper->getConfigData('show_on_pdp', null, $methodCode);
         }
 
-        if (!$this->helper->isLatitudepayEnabled() && !$this->helper->isGenoapayEnabled())
+        if (!$lpayEnabled && !$gpayEnabled) {
             return 0;
-
-        return $this->helper->getConfigData('show_on_pdp'); //based on whatever's active (depending on store's currency setting)
+        }
+        
+        //based on whatever's active (depending on store's currency setting)
+        return $this->helper->getConfigData('show_on_pdp');
     }
 
     /**
      * Retrieve Snippet Image
+     * 
      * @throws \Magento\Framework\Exception\LocalizedException
      * @return \Magento\Framework\Phrase
      */
     public function getSnippetImage()
     {
-        /** @noinspection PhpUndefinedMethodInspection */
+        /* @noinspection PhpUndefinedMethodInspection */
         $param = [
             'amount' => $this->getAmount(),
             'services' => $this->helper->getLatitudepayPaymentServices(),
@@ -137,15 +157,19 @@ class PaymentOptions extends \Magento\Framework\View\Element\Template
 
     /**
      * Retrieve util js
+     * 
      * @throws \Magento\Framework\Exception\LocalizedException
      * @return \Magento\Framework\Phrase
      */
     public function getUtilJs()
     {
-        /** @noinspection PhpUndefinedMethodInspection */
+        /* @noinspection PhpUndefinedMethodInspection */
         return $this->helper->getUtilJs();
     }
 
+    /**
+     * Get price formated for LC widget
+     */
     protected function getPriceForLC()
     {
         $product = $this->getCurrentProduct();
@@ -157,6 +181,11 @@ class PaymentOptions extends \Magento\Framework\View\Element\Template
         return round((float)$product->getPrice(), 2);
     }
 
+    /**
+     * Get options for LC widget
+     * 
+     * @param string $page
+     */
     public function getLCOptions($page)
     {
         $product = $this->getCurrentProduct();
@@ -170,7 +199,7 @@ class PaymentOptions extends \Magento\Framework\View\Element\Template
             "layout" => $this->helper->getConfigData('layout', null, 'latitude'),
             "paymentOption" => $this->helper->getConfigData('plan_type', null, 'latitude'),
             "promotionMonths" => $this->helper->getConfigData('plan_period', null, 'latitude'),
-            "minAmount" => $this->helper->getConfigData('minimum_amount', null, 'latitude'), 
+            "minAmount" => $this->helper->getConfigData('minimum_amount', null, 'latitude'),
             "product" => [
                 "id" => $product->getId() ? $product->getId() : '',
                 "name" =>  $product->getName() ? $product->getName() : '',
@@ -181,32 +210,43 @@ class PaymentOptions extends \Magento\Framework\View\Element\Template
         ]);
     }
 
+    /**
+     * Retrieve LC's merchant ID
+     */
     public function getLCMerchantID()
     {
-       return $this->helper->getConfigData('merchant_id', null, 'latitude');
+        return $this->helper->getConfigData('merchant_id', null, 'latitude');
     }
 
+    /**
+     * Retrieve LC's base API url
+     */
     public function getLCHost()
     {
         $isTest = (boolean)($this->helper->getConfigData('test_mode', null, 'latitude') === '1');
-        return $isTest ? 
-            'https://develop.checkout.dev.merchant-services-np.lfscnp.com' 
-            : 
+        return $isTest ?
+            'https://develop.checkout.dev.merchant-services-np.lfscnp.com'
+            :
             'https://checkout.latitudefinancial.com';
     }
 
     /**
-     * override from \Magento\Framework\View\Element\Template
+     * Override from \Magento\Framework\View\Element\Template
      */
     public function _toHtml()
     {
         $_product = $this->getCurrentProduct();
-        if(!$_product){
+
+        if (!$_product) {
             return '';
         }
-        if( $_product->isAvailable() && $_product->isSaleable() && ($this->helper->isLatitudepayEnabled() || $this->helper->isGenoapayEnabled() || $this->helper->isLCEnabled())){
+
+        $paymentEnabled = $this->helper->isLatitudepayEnabled() || $this->helper->isGenoapayEnabled() || $this->helper->isLCEnabled();
+
+        if ($_product->isAvailable() && $_product->isSaleable() && $paymentEnabled) {
             return parent::_toHtml();
         }
+        
         return '';
     }
 }

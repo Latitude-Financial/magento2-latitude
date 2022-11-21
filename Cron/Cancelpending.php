@@ -6,8 +6,10 @@
 namespace LatitudeNew\Payment\Cron;
 
 /**
- * Latitude cancel Pending order, a cleaner for cases where customer leaves the payment portal before completing purchase
- */ 
+ * Latitude cancel Pending order:
+ * a cleaner for cases where customer leaves the payment portal
+ * before completing purchase
+ */
 class Cancelpending
 {
     /**
@@ -22,13 +24,13 @@ class Cancelpending
 
     /**
      * @var \Magento\Sales\Api\Data\OrderInterface
-     */    
+     */
     protected $cancelOrder;
 
     /**
      * @var \Magento\Framework\App\Config\ScopeConfigInterface
      */
-    protected $scopeConfig;    
+    protected $scopeConfig;  
 
     /**
      * @var \LatitudeNew\Payment\Model\Api
@@ -38,14 +40,13 @@ class Cancelpending
     /**
      * Construct
      *
-     * @param \Psr\Log\LoggerInterface $logger
+     * @param \LatitudeNew\Payment\Helper\Data $helper
      * @param \Magento\Sales\Model\ResourceModel\Order\CollectionFactory $orderCollectionFactory
      * @param \Magento\Sales\Api\Data\OrderInterface $cancelOrder
      * @param \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig
      * @param \LatitudeNew\Payment\Model\Api $latitudeApi
      */
     public function __construct(
-        // \Psr\Log\LoggerInterface $logger,
         \LatitudeNew\Payment\Helper\Data $helper,
         \Magento\Sales\Model\ResourceModel\Order\CollectionFactory $orderCollectionFactory,
         \Magento\Sales\Api\Data\OrderInterface $cancelOrder,
@@ -78,18 +79,19 @@ class Cancelpending
             
             if ($orderAge > $frequency) {
                 $this->helper->log('Order number ' . $order->getId() .' is expired, Cancelling Order...');
-                /**CAVEAT: 
+                /**CAVEAT:
                  * We don't end up checking for status because TransactionId is only saved on payment completion
                    and we need transaction ID to check for order status on Lpay API
-                   Also, the success scenario in case where customer exit the portal before redirected back from payment completion
-                   has been handled by Lpay's callback feature, so there will not be a pending request waiting to be "processed"
+                   Also, the success scenario in case where customer exit the portal before
+                   redirected back from payment completion has been handled by Lpay's callback feature,
+                   so there will not be a pending request waiting to be "processed"
                    hence, anything pending at the point of 24 hours, should be considered as cancelled order
                 */
                 // $purchasePaid = $this->latitudeApi->checkStatus($order);
                 // if (!$purchasePaid) {
                     $order->setState(\Magento\Sales\Model\Order::STATE_CANCELED, true);
                     $order->setStatus(\Magento\Sales\Model\Order::STATE_CANCELED);
-                    $order->addStatusToHistory($order->getStatus(), 'Cancelled by Cron - The payment was not approved.');
+                    $order->addStatusToHistory($order->getStatus(), 'Cancelled by Cron - Payment was not approved.');
                     $order->save();
                 // } else {
                 //     $order->setState(\Magento\Sales\Model\Order::STATE_PROCESSING, true);

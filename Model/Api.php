@@ -563,15 +563,17 @@ class Api extends \Magento\Framework\Model\AbstractModel
 
             $options = [
                 CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_ENCODING       => "",
                 CURLOPT_FOLLOWLOCATION => true,
                 CURLOPT_MAXREDIRS      => 10,
                 CURLOPT_TIMEOUT        => 30
             ];
 
             $headers = [
-                'Content-Type' => 'application/json',
                 'Authorization' => 'Basic ' . base64_encode("$merchantId:$merchantSk"),
-                'Expected' => ''
+                "Content-Type" => "application/json",
+                "Referer" => $baseUrl,
+                "Expect:" => "100-continue"
             ];
 
             $response = $this->helper->makecurlCall($url, $options, $headers, false, $bodyStr, true, 'latitude');
@@ -643,15 +645,18 @@ class Api extends \Magento\Framework\Model\AbstractModel
 
         $options = [
             CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_ENCODING       => "",
             CURLOPT_FOLLOWLOCATION => true,
             CURLOPT_MAXREDIRS      => 10,
             CURLOPT_TIMEOUT        => 30
         ];
 
+        $baseUrl =  $this->storeManager->getStore()->getBaseUrl();
         $headers = [
-            'Content-Type' => 'application/json',
             'Authorization' => 'Basic ' . base64_encode("$merchantId:$merchantSk"),
-            'Expected' => ''
+            "Content-Type" => "application/json",
+            "Referer" => $baseUrl,
+            "Expect:" => "100-continue"
         ];
 
         $response = $this->helper->makecurlCall($url, $options, $headers, false, $bodyStr, true, 'latitude');
@@ -702,16 +707,21 @@ class Api extends \Magento\Framework\Model\AbstractModel
     
         $options = [
             CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_ENCODING       => "",
             CURLOPT_FOLLOWLOCATION => true,
             CURLOPT_MAXREDIRS      => 10,
             CURLOPT_TIMEOUT        => 30
         ];
-    
+
+        $baseUrl =  $this->storeManager->getStore()->getBaseUrl();
         $headers = [
-            'Content-Type' => 'application/json',
             'Authorization' => 'Basic ' . base64_encode("$merchantId:$merchantSk"),
-            'Expected' => ''
+            "Content-Type" => "application/json",
+            "Referer" => $baseUrl,
+            "Expect:" => "100-continue"
         ];
+
+        $response = $this->helper->makecurlCall($url, $options, $headers, false, $bodyStr, true, 'latitude');
         
         $response = $this->helper->makecurlCall($url, $options, $headers, false, $bodyStr, true, 'latitude');
     
@@ -796,15 +806,18 @@ class Api extends \Magento\Framework\Model\AbstractModel
     
         $options = [
             CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_ENCODING       => "",
             CURLOPT_FOLLOWLOCATION => true,
             CURLOPT_MAXREDIRS      => 10,
             CURLOPT_TIMEOUT        => 30
         ];
-    
+
+        $baseUrl =  $this->storeManager->getStore()->getBaseUrl();
         $headers = [
-            'Content-Type' => 'application/json',
             'Authorization' => 'Basic ' . base64_encode("$merchantId:$merchantSk"),
-            'Expected' => ''
+            "Content-Type" => "application/json",
+            "Referer" => $baseUrl,
+            "Expect:" => "100-continue"
         ];
         
         $response = $this->helper->makecurlCall($url, $options, $headers, false, $bodyStr, true, 'latitude');
@@ -890,15 +903,18 @@ class Api extends \Magento\Framework\Model\AbstractModel
     
         $options = [
             CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_ENCODING       => "",
             CURLOPT_FOLLOWLOCATION => true,
             CURLOPT_MAXREDIRS      => 10,
             CURLOPT_TIMEOUT        => 30
         ];
-    
+
+        $baseUrl =  $this->storeManager->getStore()->getBaseUrl();
         $headers = [
-            'Content-Type' => 'application/json',
             'Authorization' => 'Basic ' . base64_encode("$merchantId:$merchantSk"),
-            'Expected' => ''
+            "Content-Type" => "application/json",
+            "Referer" => $baseUrl,
+            "Expect:" => "100-continue"
         ];
         
         $response = $this->helper->makecurlCall($url, $options, $headers, false, $bodyStr, true, 'latitude');

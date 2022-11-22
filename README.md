@@ -21,12 +21,16 @@ Tested up to: Magento 2.4.5.
 
 ## Changelog
 
-### 3.0.6
+### 3.0.7
 - 22 November 2022
-- Phpcs M2 compliance update
+- Mimic original plugin's curl header and options
 
 <details>
 <summary>Older versions</summary>
+
+### 3.0.6
+- 22 November 2022
+- Phpcs M2 compliance update
 
 ### 3.0.5
 - 16 November 2022

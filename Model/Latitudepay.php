@@ -13,7 +13,7 @@ use Magento\Directory\Helper\Data as DirectoryHelper;
 class Latitudepay extends \Magento\Payment\Model\Method\AbstractMethod
 {
     
-    protected const PAYMENT_METHOD_LATITUDEPAY_CODE = 'latitudepay';
+    public const PAYMENT_METHOD_LATITUDEPAY_CODE = 'latitudepay';
 
     /**
      * Payment method code

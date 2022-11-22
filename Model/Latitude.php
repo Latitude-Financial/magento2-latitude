@@ -5,7 +5,7 @@ use Magento\Directory\Helper\Data as DirectoryHelper;
 
 class Latitude extends \Magento\Payment\Model\Method\AbstractMethod
 {
-    protected const MINUTE_DELAYED_ORDER = 75;
+    public const MINUTE_DELAYED_ORDER = 75;
 
     /**
      * @var string

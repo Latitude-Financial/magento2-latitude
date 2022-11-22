@@ -48,7 +48,7 @@ class Checkbox extends \Magento\Config\Block\System\Config\Form\Field
         $values = [];
         $objectManager = \Magento\Framework\App\ObjectManager::getInstance();
 
-        foreach ($objectManager->create(LatitudeNew\Payment\Model\Config\Source\Term::class)->toOptionArray() as $value) {
+        foreach ($objectManager->create('LatitudeNew\Payment\Model\Config\Source\Term')->toOptionArray() as $value) {
             $values[$value['value']] = $value['label'];
         }
 

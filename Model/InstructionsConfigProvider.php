@@ -152,7 +152,7 @@ class InstructionsConfigProvider implements ConfigProviderInterface
                 'currency_symbol' => $this->currency->getCurrencySymbol(),
                 'utilJs' => $this->helper->getUtilJs(),
                 'lpay_installment_block' => $lpayinstallmentBlock,
-                'gpay_installment_block'    => $gpayinstallmentBlockId,
+                'gpay_installment_block'    => $gpayinstallmentBlock,
                 'lc_script' => $this->helper->getScriptURL(),
                 'lc_options' => [
                     "merchantId" => $this->helper->getConfigData('merchant_id', null, 'latitude'),

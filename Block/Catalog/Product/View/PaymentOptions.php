@@ -44,7 +44,7 @@ class PaymentOptions extends \Magento\Framework\View\Element\Template
     /**
      * @var int
      */
-    protected const INSTALLMENT_NO = 10;
+    public const INSTALLMENT_NO = 10;
 
     /**
      * PaymentOptions constructor.

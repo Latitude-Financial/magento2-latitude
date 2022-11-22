@@ -13,7 +13,7 @@ class Checkbox extends \Magento\Config\Block\System\Config\Form\Field
     /**
      * @var string
      */
-    protected const CONFIG_PATH = 'payment/latitudepay/payment_terms';
+    public const CONFIG_PATH = 'payment/latitudepay/payment_terms';
 
     /**
      * @var string

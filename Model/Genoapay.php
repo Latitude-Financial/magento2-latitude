@@ -13,7 +13,7 @@ use Magento\Directory\Helper\Data as DirectoryHelper;
 class Genoapay extends \Magento\Payment\Model\Method\AbstractMethod
 {
     
-    protected const PAYMENT_METHOD_GENOAPAY_CODE = 'genoapay';
+    public const PAYMENT_METHOD_GENOAPAY_CODE = 'genoapay';
 
     /**
      * Payment method code

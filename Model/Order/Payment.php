@@ -21,13 +21,13 @@ use Magento\Sales\Api\CreditmemoManagementInterface as CreditmemoManager;
  */
 class Payment extends \Magento\Sales\Model\Order\Payment
 {
-    protected const REVIEW_ACTION_ACCEPT = 'accept';
+    public const REVIEW_ACTION_ACCEPT = 'accept';
  
-    protected const REVIEW_ACTION_DENY = 'deny';
+    public const REVIEW_ACTION_DENY = 'deny';
 
-    protected const REVIEW_ACTION_UPDATE = 'update';
+    public const REVIEW_ACTION_UPDATE = 'update';
 
-    protected const PARENT_TXN_ID = 'parent_transaction_id';
+    public const PARENT_TXN_ID = 'parent_transaction_id';
 
     /**
      * @var object

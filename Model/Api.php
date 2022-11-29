@@ -32,22 +32,28 @@ class Api extends \Magento\Framework\Model\AbstractModel
      */
     protected $_historyCollectionFactory;
 
+    /**
+     * @var \Magento\Framework\App\Config\ScopeConfigInterface
+     */
     protected $scopeConfig;
 
+    /**
+     * @var \Magento\Store\Model\StoreManagerInterface
+     */
     protected $storeManager;
 
     /**
      * @var \LatitudeNew\Payment\Helper\Data
-     */  
+     */
     public $helper;
 
     /**
      * Construct
-     *    
+     * 
      * @param \Magento\Framework\Message\ManagerInterface $messageManager
-     * @param \Magento\Sales\Model\Order $orderFactory
-     * @param EncryptorInterface $encryptor
-     * @param \Magento\Sales\Model\ResourceModel\Order\Status\History\CollectionFactory $historyCollectionFactory
+     * @param \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig
+     * @param \Magento\Store\Model\StoreManagerInterface $storeManager
+     * @param \LatitudeNew\Payment\Helper\Data $helper
      */
     public function __construct(
         \Magento\Framework\Message\ManagerInterface $messageManager,
@@ -64,64 +70,62 @@ class Api extends \Magento\Framework\Model\AbstractModel
 
     /**
      * Get auth token from latitudepay/genoapay API based on currency settings (retrieved in helper)
+     * 
+     * @param string $storeId
+     * @param string $methodCode
      */
-    function requestAuthToken($storeId = null,$methodCode= null){
+    public function requestAuthToken($storeId = null, $methodCode = null)
+    {
         $this->helper->log('****** REQUESTING AUTH TOKEN ******');
-        $env = $this->helper->getConfigData('environment',$storeId,$methodCode);
-        $gatewayUrl = $this->helper->getConfigData($env === 'production' ? 'api_url_production' : 'api_url_sandbox',$storeId,$methodCode);
-        $clientId = $this->helper->getConfigData('client_key',$storeId,$methodCode);
-        $clientSecret = $this->helper->getConfigData('client_secret',$storeId,$methodCode);
 
-        $options = array(
+        $env = $this->helper->getConfigData('environment', $storeId, $methodCode);
+        $gatewayUrl = $this->helper->getConfigData(
+            $env === 'production' ? 'api_url_production' : 'api_url_sandbox',
+            $storeId,
+            $methodCode
+        );
+        $clientId = $this->helper->getConfigData('client_key', $storeId, $methodCode);
+        $clientSecret = $this->helper->getConfigData('client_secret', $storeId, $methodCode);
+
+        $options = [
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_FOLLOWLOCATION => true,
             CURLOPT_MAXREDIRS      => 10,
             CURLOPT_TIMEOUT        => 30
-        );
+        ];
 
         $headers = [
             'Accept' => $this->contentType,
             'Content-Type' => $this->contentType,
-            "Cache-Control" => "no-cache",
-            'Expected' => ''
+            "Cache-Control" => "no-cache"
         ];
 
         $url = "$gatewayUrl/token";
 
         $credentials = [$clientId, $clientSecret];
 
-        try{
+        try {
             $response = $this->helper->makecurlCall($url, $options, $headers, $credentials, null);
 
-            if (property_exists($response, 'error')){
+            if (property_exists($response, 'error')) {
                 $this->messageManager->addErrorMessage(__(sprintf("Error getting token : %s", $response->error)));
                 $this->helper->log("Auth error: $response->error");
                 return null;
-            }
-            else
+            } else {
                 return $response->authToken;
-        }
-        catch (\Exception $e){
+            }
+        } catch (\Exception $e) {
             $this->messageManager->addErrorMessage(__(sprintf("Error getting token : %s", $e->getMessage())));
             $this->helper->log("Auth error: $e");
         }
     }
 
-    // function stripJSON($obj){
-    //     $str = '';
-        
-    //     foreach ($obj as $key => $value) {
-    //         if (is_array($value) || is_object($value)) {
-    //             $str .= (is_array($obj) ? '' : $key) . $this->stripJSON($value);
-    //         } 
-    //         else{
-    //             $str .= (is_array($obj) ? '' : $key) . preg_replace("/\s+/", '', !is_numeric($value) && !is_string($value) ? var_export($value,true) : $value);
-    //         }
-    //     }    
-    //     return $str;
-    // }
-
-    function stripJSON($requestBody)
+    /**
+     * Strip json for creating signature
+     * 
+     * @param string $requestBody
+     */
+    public function stripJSON($requestBody)
     {
         $pattern = '/{"|":{"|","|":"|"},"|}],"|":|\[{"|"}}],"|}}|"}]"|},|,"|"}}|"}/';
         $replacement = '';
@@ -132,41 +136,53 @@ class Api extends \Magento\Framework\Model\AbstractModel
 
         return $JSONStringWithoutFormatting;
     }
-    
-    // function getJSONsignature($jsn, $apiSecret){    
-    //     $progress = $this->stripJSON(json_decode($jsn,true));
-    //     $this->helper->log("Stripped: $progress");
-    //     $progress = base64_encode($progress);
-    //     $this->helper->log("base64: $progress");
-    //     return hash_hmac('sha256', $progress, $apiSecret);
-    // }
 
-    function getJSONsignature($jsn, $apiSecret)
+    /**
+     * Create signature from json body for API communication
+     * 
+     * @param string $jsn
+     * @param string $apiSecret
+     */
+    public function getJSONsignature($jsn, $apiSecret)
     {
         $progress = trim($this->stripJSON($jsn));
         $progress = base64_encode(str_replace(' ', '', $progress));
-        return hash_hmac('sha256', str_replace(' ', '',trim($progress)), $apiSecret);
+        return hash_hmac('sha256', str_replace(' ', '', trim($progress)), $apiSecret);
     }
 
-    function sanitizeDOB($dob){
-        if ($dob === ''){
+    /**
+     * Sanitize DOB into format accepted by API
+     * 
+     * @param string $dob
+     */
+    public function sanitizeDOB($dob)
+    {
+        if ($dob === '') {
             return $dob;
         }
 
         $epoch = strtotime($dob);
-        return date( "Y-m-d", $epoch );
+        return date("Y-m-d", $epoch);
     }
 
     /**
      * Get purchase redirect url
+     * 
+     * @param string $authToken
+     * @param object $lastOrder
      */
-    function createOnlinePurchase($authToken, $lastOrder)
+    public function createOnlinePurchase($authToken, $lastOrder)
     {
         $this->helper->log('****** REQUESTING PURCHASE URL ******');
-        try{
+        try {
             $baseUrl =  $this->storeManager->getStore()->getBaseUrl();
             $env = $this->helper->getConfigData('environment');
-            $gatewayUrl = $this->helper->getConfigData($env === 'production' ? 'api_url_production' : 'api_url_sandbox');
+            $gatewayUrl = $this->helper->getConfigData(
+                $env === 'production' ?
+                'api_url_production'
+                :
+                'api_url_sandbox'
+            );
             $clientSecret = $this->helper->getConfigData('client_secret');
 
             $order = $lastOrder->getData();
@@ -176,11 +192,11 @@ class Api extends \Magento\Framework\Model\AbstractModel
 
             //for PHP <7.4 compatibility, changed arrow function to function with use()
             $products = array_map(function ($item) use ($lastOrder) {
-                //Don't use Quote object!! quote->getAllVisibleItems(), item->getQty() returns No products were found 
+                //Don't use Quote object!! quote->getAllVisibleItems(), item->getQty() returns No products were found
                 return [
                     "name" => $item->getName(),
                     "price" => [
-                    "amount" => sprintf('%.2F',$item->getPriceInclTax()),
+                    "amount" => sprintf('%.2F', $item->getPriceInclTax()),
                     "currency" => $lastOrder->getOrderCurrencyCode(),
                     ],
                     "sku" => $item->getSku(),
@@ -234,19 +250,19 @@ class Api extends \Magento\Framework\Model\AbstractModel
                     [
                         "carrier" => ($lastOrder->getShippingMethod() ? $lastOrder->getShippingMethod() : 'N/A'),
                         "price" => [
-                            "amount" => sprintf('%.2F',$lastOrder->getShippingAmount()),
+                            "amount" => sprintf('%.2F', $lastOrder->getShippingAmount()),
                             "currency" => $lastOrder->getOrderCurrencyCode()
                         ],
                         "taxIncluded" => true
                     ]
                 ],
                 "taxAmount" => [
-                    "amount" => sprintf('%.2F',$lastOrder->getTaxAmount()),
+                    "amount" => sprintf('%.2F', $lastOrder->getTaxAmount()),
                     "currency" => $lastOrder->getOrderCurrencyCode()
                 ],
                 "reference" => $order['increment_id'],
                 "totalAmount" => [
-                    "amount" => sprintf('%.2F',$order['grand_total']),
+                    "amount" => sprintf('%.2F', $order['grand_total']),
                     "currency" => $lastOrder->getOrderCurrencyCode()
                 ],
                 "returnUrls" =>[
@@ -256,7 +272,7 @@ class Api extends \Magento\Framework\Model\AbstractModel
                 ]
             ];
 
-            $bodyStr = json_encode($body,JSON_UNESCAPED_SLASHES);
+            $bodyStr = json_encode($body, JSON_UNESCAPED_SLASHES);
             $this->helper->log("Body String: $bodyStr");
 
             $signature = $this->getJSONsignature($bodyStr, $clientSecret);
@@ -264,45 +280,50 @@ class Api extends \Magento\Framework\Model\AbstractModel
 
             $url = "$gatewayUrl/sale/online?signature=$signature";
 
-            $options = array(
+            $options = [
                 CURLOPT_RETURNTRANSFER => true,
                 CURLOPT_FOLLOWLOCATION => true,
                 CURLOPT_MAXREDIRS      => 10,
                 CURLOPT_TIMEOUT        => 30
-            );
+            ];
 
             $headers = [
                 'Accept' => $this->contentType,
                 'Content-Type' => $this->contentType,
                 'Cache-Control' => 'no-cache',
                 'X-Idempotency-Key' => uniqid('', true),
-                'Authorization' => 'Bearer '.$authToken,
-                'Expected' => ''
+                'Authorization' => 'Bearer '.$authToken
             ];
-
             
             $response = $this->helper->makecurlCall($url, $options, $headers, false, $bodyStr);
 
-            if (property_exists($response, 'error')){
+            if (property_exists($response, 'error')) {
                 $this->helper->log("Error creating purchase : $response->error");
                 $this->messageManager->addErrorMessage(__(sprintf("Error creating purchase : %s", $response->error)));
                 return $response->error;
-            }
-            else{
+            } else {
                 //workaround since setData() doesn't persist new key to the DB
                 $lastOrder->setCustomerNote($response->reference)->save();
                 $this->helper->log("Successful purchase creation with reference: $response->reference");
                 return $response->paymentUrl;
             }
-        }
-        catch (\Exception $e){
+        } catch (\Exception $e) {
             $this->messageManager->addErrorMessage(__(sprintf("Error creating purchase : %s", $e->getMessage())));
             $this->helper->log("Error creating purchase : $e");
             return $e->getMessage();
         }
     }
 
-    function refund($order, $transactionId, $amount, $reason){
+    /**
+     * Process Refund order to BNPL API
+     * 
+     * @param object $order
+     * @param string $transactionId
+     * @param float $amount
+     * @param string $reason
+     */
+    public function refund($order, $transactionId, $amount, $reason)
+    {
         $this->helper->log('****** INITIATING REFUND ******');
         //get specific payment method to refund
         $storeId = $order->getStore()->getId();
@@ -312,9 +333,13 @@ class Api extends \Magento\Framework\Model\AbstractModel
         $authToken = $this->requestAuthToken($storeId, $methodCode);
 
         //get config data for that specific payment method
-        $env = $this->helper->getConfigData('environment',$storeId,$methodCode);
-        $gatewayUrl = $this->helper->getConfigData($env === 'production' ? 'api_url_production' : 'api_url_sandbox',$storeId,$methodCode);
-        $clientSecret = $this->helper->getConfigData('client_secret',$storeId,$methodCode); 
+        $env = $this->helper->getConfigData('environment', $storeId, $methodCode);
+        $gatewayUrl = $this->helper->getConfigData(
+            $env === 'production' ? 'api_url_production' : 'api_url_sandbox',
+            $storeId,
+            $methodCode
+        );
+        $clientSecret = $this->helper->getConfigData('client_secret', $storeId, $methodCode);
 
         $body = [
             'amount' => [
@@ -325,8 +350,7 @@ class Api extends \Magento\Framework\Model\AbstractModel
             'reference' => $order->getIncrementId(),
         ];
 
-       
-        $bodyStr = json_encode($body,JSON_UNESCAPED_SLASHES);
+        $bodyStr = json_encode($body, JSON_UNESCAPED_SLASHES);
         $this->helper->log("Body String: $bodyStr");
 
         $signature = $this->getJSONsignature($bodyStr, $clientSecret);
@@ -334,36 +358,38 @@ class Api extends \Magento\Framework\Model\AbstractModel
 
         $url = "$gatewayUrl/sale/$transactionId/refund?signature=$signature";
 
-        $options = array(
+        $options = [
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_FOLLOWLOCATION => true,
             CURLOPT_MAXREDIRS      => 10,
             CURLOPT_TIMEOUT        => 30
-        );
+        ];
 
         $headers = [
             'Accept' => $this->contentType,
             'Content-Type' => $this->contentType,
             'Cache-Control' => 'no-cache',
             'X-Idempotency-Key' => uniqid('', true),
-            'Authorization' => 'Bearer '.$authToken,
-            'Expected' => ''
+            'Authorization' => 'Bearer '.$authToken
         ];
         
         $response = $this->helper->makecurlCall($url, $options, $headers, false, $bodyStr);
 
-        if (property_exists($response, 'error')){
+        if (property_exists($response, 'error')) {
             $this->helper->log('Error issuing refund - '.$response->error.' Transaction Id: '.$transactionId);
             throw new \Magento\Framework\Exception\LocalizedException(
                 __('Error issuing refund - '.$response->error.' Transaction Id: '.$transactionId)
-            );            
+            );      
         }
     }
 
     /**
      * Unused at the moment, was supposed to be used by cancel order cron
+     * 
+     * @param object $order
      */
-    function checkStatus($order){
+    public function checkStatus($order)
+    {
         $this->helper->log('****** CHECKING ORDER STATUS ******');
         //get transaction id to check
         $transactionId = $order->getPayment()->getTransactionId();
@@ -375,42 +401,53 @@ class Api extends \Magento\Framework\Model\AbstractModel
         //request auth from that specific payment method
         $authToken = $this->requestAuthToken($storeId, $methodCode);
 
-        $this->helper->log("Checking Order: ".$order->getId()." with Trasaction #$transactionId, storeId: $storeId, and methodCode: $methodCode");
+        $this->helper->log(
+            "Checking Order: ".$order->getId().
+            " with Trasaction #$transactionId, storeId: $storeId, and methodCode: $methodCode"
+        );
 
         //get config data for that specific payment method
-        $env = $this->helper->getConfigData('environment',$storeId,$methodCode);
-        $gatewayUrl = $this->helper->getConfigData($env === 'production' ? 'api_url_production' : 'api_url_sandbox',$storeId,$methodCode);
+        $env = $this->helper->getConfigData('environment', $storeId, $methodCode);
+        $gatewayUrl = $this->helper->getConfigData(
+            $env === 'production' ? 'api_url_production' : 'api_url_sandbox',
+            $storeId,
+            $methodCode
+        );
         
         $url = "$gatewayUrl/sale/pos/$transactionId/status";
 
-        $options = array(
+        $options = [
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_FOLLOWLOCATION => true,
             CURLOPT_MAXREDIRS      => 10,
             CURLOPT_TIMEOUT        => 30
-        );
+        ];
 
         $headers = [
             'Accept' => $this->contentType,
             'Content-Type' => $this->contentType,
             'Cache-Control' => 'no-cache',
-            'Authorization' => 'Bearer '.$authToken,
-            'Expected' => ''
+            'Authorization' => 'Bearer '.$authToken
         ];
         
         $response = $this->helper->makecurlCall($url, $options, $headers, false, null, false);
 
-        if (property_exists($response, 'error')){
-            return false;           
-        }
-        else if ($response->status === 'APPROVED')
+        if (property_exists($response, 'error')) {
+            return false; 
+        } elseif ($response->status === 'APPROVED') {
             return true;
-        else
+        } else {
             return false;
+        }
     }
 
-
-    function generateSignatureFromString($str, $apiSecret)
+    /**
+     * Create signature for cancel sequence
+     * 
+     * @param string $str
+     * @param string $apiSecret
+     */
+    public function generateSignatureFromString($str, $apiSecret)
     {
         $base64 = base64_encode($str);
         return hash_hmac('sha256', $base64, $apiSecret);
@@ -418,15 +455,21 @@ class Api extends \Magento\Framework\Model\AbstractModel
 
     /**
      * Get purchase redirect url
+     * 
+     * @param object $lastOrder
      */
-    function createLCPurchase($lastOrder)
+    public function createLCPurchase($lastOrder)
     {
         $this->helper->log('****** REQUESTING LC PURCHASE URL ******', 'latitude');
-        try{
+        try {
             //TODO: all getConfigData should have (path,null,'latitude') on the params
             $baseUrl =  $this->storeManager->getStore()->getBaseUrl();
             $isTest = (boolean)($this->helper->getConfigData('test_mode', null, 'latitude') === '1');
-            $gatewayUrl = $this->helper->getConfigData($isTest ? 'api_url_sandbox' : 'api_url_production', null, 'latitude');
+            $gatewayUrl = $this->helper->getConfigData(
+                $isTest ? 'api_url_sandbox': 'api_url_production',
+                null,
+                'latitude'
+            );
             $merchantId = $this->helper->getConfigData('merchant_id', null, 'latitude');
             $merchantSk = $this->helper->getConfigData('merchant_secret', null, 'latitude');
 
@@ -442,13 +485,13 @@ class Api extends \Magento\Framework\Model\AbstractModel
 
             //for PHP <7.4 compatibility, changed arrow function to function with use()
             $products = array_map(function ($item) use ($lastOrder) {
-                //Don't use Quote object!! quote->getAllVisibleItems(), item->getQty() returns No products were found 
+                //Don't use Quote object!! quote->getAllVisibleItems(), item->getQty() returns No products were found
                 return [
                     "name" => $item->getName(),
                     "sku" => $item->getSku(),
                     "quantity" => ((int)$item->getQtyOrdered()),
-                    "unitPrice" => (float)sprintf('%.2F',$item->getPriceInclTax()),
-                    "amount" => (float)sprintf('%.2F',$item->getQtyOrdered() * $item->getPriceInclTax()),
+                    "unitPrice" => (float)sprintf('%.2F', $item->getPriceInclTax()),
+                    "amount" => (float)sprintf('%.2F', $item->getQtyOrdered() * $item->getPriceInclTax()),
                     "requiresShipping" => (boolean)($item->getIsVirtual() === '0'),
                     "isGiftCard" => false
                 ];
@@ -466,7 +509,7 @@ class Api extends \Magento\Framework\Model\AbstractModel
                 "merchantId" => $merchantId,
                 "isTest" =>  $isTest,
                 "merchantReference" => $order['increment_id'],
-                "amount" => (float)sprintf('%.2F',$order['grand_total']),
+                "amount" => (float)sprintf('%.2F', $order['grand_total']),
                 "currency" => $lastOrder->getOrderCurrencyCode(),
                 "customer" => [
                    "firstName" => $customer_firstname,
@@ -475,11 +518,17 @@ class Api extends \Magento\Framework\Model\AbstractModel
                    "email" => $order['customer_email'],
                 ],
                 "shippingAddress" => [
-                    "name" => (string)$shipping['firstname'] ? $shipping['firstname'] . ' ' . $shipping['lastname'] : $billing['firstname'] . ' ' . $billing['lastname'],
+                    "name" => (string)$shipping['firstname'] ?
+                                    $shipping['firstname'] . ' ' . $shipping['lastname']
+                                    :
+                                    $billing['firstname'] . ' ' . $billing['lastname'],
                     "line1" => (string)$shipping['street'] ? $shipping['street'] : $billing['street'],
                     "city" => (string)$shipping['city'] ? $shipping['city'] : $billing['city'],
                     "postCode" =>  (string)$shipping['postcode'] ? $shipping['postcode'] : $billing['postcode'],
-                    "state" => (string)$shipping['region'] ? $shipping['region'] : ($billing['region'] ? $billing['region'] : ''),
+                    "state" => (string)$shipping['region'] ?
+                                    $shipping['region']
+                                    :
+                                    ($billing['region'] ? $billing['region'] : ''),
                     "countryCode" => (string)$shipping['country_id'] ? $shipping['country_id'] : $billing['country_id'],
                     "phone" => (string)$shipping['telephone'] ? $shipping['telephone'] : $billing['telephone'],
                 ],
@@ -497,24 +546,24 @@ class Api extends \Magento\Framework\Model\AbstractModel
                     "cancel" => $baseUrl . $this->helper->getConfigData('cancel_url') . $cancel_query,
                     "complete" => $baseUrl . $this->helper->getConfigData('callback_url'),
                 ],
-                "totalShippingAmount" => (float)sprintf('%.2F',$lastOrder->getShippingAmount()),
-                "totalDiscountAmount" => abs((float)sprintf('%.2F',$lastOrder->getDiscountAmount())),
+                "totalShippingAmount" => (float)sprintf('%.2F', $lastOrder->getShippingAmount()),
+                "totalDiscountAmount" => abs((float)sprintf('%.2F', $lastOrder->getDiscountAmount())),
                 "platformType" => 'magento2',
                 "pluginVersion" => $this->helper->getConfigData('version', null, 'latitudepay'),
             ];
 
-            $bodyStr = json_encode($body,JSON_UNESCAPED_SLASHES);
+            $bodyStr = json_encode($body, JSON_UNESCAPED_SLASHES);
             $this->helper->log("Body String: $bodyStr", 'latitude');
 
             $url = "$gatewayUrl/purchase";
 
-            $options = array(
+            $options = [
                 CURLOPT_RETURNTRANSFER => true,
                 CURLOPT_ENCODING       => "",
                 CURLOPT_FOLLOWLOCATION => true,
                 CURLOPT_MAXREDIRS      => 10,
                 CURLOPT_TIMEOUT        => 30
-            );
+            ];
 
             $headers = [
                 'Authorization' => 'Basic ' . base64_encode("$merchantId:$merchantSk"),
@@ -525,28 +574,34 @@ class Api extends \Magento\Framework\Model\AbstractModel
 
             $response = $this->helper->makecurlCall($url, $options, $headers, false, $bodyStr, true, 'latitude');
 
-            if ($response->status !== 200){
+            if ($response->status !== 200) {
                 $this->helper->log("Error creating purchase with status: $response->status", 'latitude');
-                $this->messageManager->addErrorMessage(__(sprintf("Error creating purchase with status: %s", $response->status)));
+                $this->messageManager->addErrorMessage(
+                    __(
+                        sprintf(
+                            "Error creating purchase with status: %s",
+                            $response->status
+                        )
+                    )
+                );
                 return $response->status;
-            }
-            else if ($response->error !== '' && $response->redirectUrl && $response->redirectUrl !== null){
+            } elseif ($response->error !== '' && $response->redirectUrl && $response->redirectUrl !== null) {
                 $this->helper->log("Purchase creation redirect with error: $response->error", 'latitude');
                 return $response->redirectUrl;
-            }
-            else if ($response->error !== ""){
+            } elseif ($response->error !== "") {
                 $this->helper->log("Error creating purchase : $response->error", 'latitude');
                 $this->messageManager->addErrorMessage(__(sprintf("Error creating purchase : %s", $response->error)));
                 return $response->error;
-            }
-            else{
+            } else {
                 //workaround since setData() doesn't persist new key to the DB
                 //$lastOrder->setCustomerNote($response->gatewayReference)->save();
-                $this->helper->log("Successful purchase creation with gateway reference: $response->gatewayReference", 'latitude');
+                $this->helper->log(
+                    "Successful purchase creation with gateway reference: $response->gatewayReference",
+                    'latitude'
+                );
                 return $response->redirectUrl;
             }
-        }
-        catch (\Exception $e){
+        } catch (\Exception $e) {
             $this->messageManager->addErrorMessage(__(sprintf("Error creating purchase : %s", $e->getMessage())));
             $this->helper->log("Error creating purchase : $e", 'latitude');
             return $e->getMessage();
@@ -554,14 +609,22 @@ class Api extends \Magento\Framework\Model\AbstractModel
     }
 
     /**
-     * Get purchase redirect url
+     * Verify response with LC API
+     * 
+     * @param string $order_id
+     * @param string $transactionId
+     * @param string $gatewayReference
      */
-    function verifyLCPurchase($order_id, $transactionReference, $gatewayReference)
+    public function verifyLCPurchase($order_id, $transactionReference, $gatewayReference)
     {
         $this->helper->log('****** VERIFYING LC CALLBACK URL ******', 'latitude');
 
         $isTest = (boolean)($this->helper->getConfigData('test_mode', null, 'latitude') === '1');
-        $gatewayUrl = $this->helper->getConfigData($isTest ? 'api_url_sandbox' : 'api_url_production', null, 'latitude');
+        $gatewayUrl = $this->helper->getConfigData(
+            $isTest ? 'api_url_sandbox' : 'api_url_production',
+            null,
+            'latitude'
+        );
         $merchantId = $this->helper->getConfigData('merchant_id', null, 'latitude');
         $merchantSk = $this->helper->getConfigData('merchant_secret', null, 'latitude');
 
@@ -571,18 +634,18 @@ class Api extends \Magento\Framework\Model\AbstractModel
             "gatewayReference" => $gatewayReference
         ];
         
-        $bodyStr = json_encode($body,JSON_UNESCAPED_SLASHES);
+        $bodyStr = json_encode($body, JSON_UNESCAPED_SLASHES);
         $this->helper->log("Body String: $bodyStr", 'latitude');
 
         $url = "$gatewayUrl/purchase/verify";
 
-        $options = array(
+        $options = [
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_ENCODING       => "",
             CURLOPT_FOLLOWLOCATION => true,
             CURLOPT_MAXREDIRS      => 10,
             CURLOPT_TIMEOUT        => 30
-        );
+        ];
 
         $baseUrl =  $this->storeManager->getStore()->getBaseUrl();
         $headers = [
@@ -597,13 +660,27 @@ class Api extends \Magento\Framework\Model\AbstractModel
         return $response;
     }
 
-    function refundLCOrder($order, $transactionId, $gatewayReference, $amount, $reason){
+    /**
+     * Process Refund order to LC API
+     * 
+     * @param object $order
+     * @param string $transactionId
+     * @param string $gatewayReference
+     * @param float $amount
+     * @param string $reason
+     */
+    public function refundLCOrder($order, $transactionId, $gatewayReference, $amount, $reason)
+    {
         $this->helper->log('****** INITIATING LC REFUND ******', 'latitude');
     
         //get specific payment method to refund
         $storeId = $order->getStore()->getId();
         $isTest = (boolean)($this->helper->getConfigData('test_mode', null, 'latitude') === '1');
-        $gatewayUrl = $this->helper->getConfigData($isTest ? 'api_url_sandbox' : 'api_url_production', null, 'latitude');
+        $gatewayUrl = $this->helper->getConfigData(
+            $isTest ? 'api_url_sandbox' : 'api_url_production',
+            null,
+            'latitude'
+        );
         $merchantId = $this->helper->getConfigData('merchant_id', null, 'latitude');
         $merchantSk = $this->helper->getConfigData('merchant_secret', null, 'latitude');
       
@@ -619,19 +696,19 @@ class Api extends \Magento\Framework\Model\AbstractModel
             'platformType' => 'magento2'
         ];
     
-        $bodyStr = json_encode($body,JSON_UNESCAPED_SLASHES);
+        $bodyStr = json_encode($body, JSON_UNESCAPED_SLASHES);
         $this->helper->log("Body String: $bodyStr", 'latitude');
     
         $url = "$gatewayUrl/refund";
     
-        $options = array(
+        $options = [
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_ENCODING       => "",
             CURLOPT_FOLLOWLOCATION => true,
             CURLOPT_MAXREDIRS      => 10,
             CURLOPT_TIMEOUT        => 30
-        );
-        
+        ];
+
         $baseUrl =  $this->storeManager->getStore()->getBaseUrl();
         $headers = [
             'Authorization' => 'Basic ' . base64_encode("$merchantId:$merchantSk"),
@@ -642,17 +719,35 @@ class Api extends \Magento\Framework\Model\AbstractModel
         
         $response = $this->helper->makecurlCall($url, $options, $headers, false, $bodyStr, true, 'latitude');
     
-        if ($response->status !== 200){
-            $this->helper->log("Error issuing refund with status: $response->status, Transaction Ref: $transactionId, Gateway Ref: $gatewayReference", 'latitude');
+        if ($response->status !== 200) {
+            $this->helper->log(
+                "Error issuing refund with status: $response->status".
+                ", Transaction Ref: $transactionId".
+                ", Gateway Ref: $gatewayReference",
+                'latitude'
+            );
             throw new \Magento\Framework\Exception\LocalizedException(
-                __('Error issuing refund - '.$response->status.' Transaction Ref: '.$transactionId.' Gateway Ref: '.$gatewayReference)
-            );  
+                __(
+                    'Error issuing refund - '.$response->status.
+                    ' Transaction Ref: '.$transactionId.
+                    ' Gateway Ref: '.$gatewayReference
+                )
+            );
         }
-        if ($response->error !== ""){
-            $this->helper->log("Error issuing refund - $response->error, Transaction Ref: $transactionId, Gateway Ref: $gatewayReference", 'latitude');
+        if ($response->error !== "") {
+            $this->helper->log(
+                "Error issuing refund - $response->error".
+                ", Transaction Ref: $transactionId".
+                ", Gateway Ref: $gatewayReference",
+                'latitude'
+            );
             throw new \Magento\Framework\Exception\LocalizedException(
-                __('Error issuing refund - '.$response->error.' Transaction Ref: '.$transactionId.' Gateway Ref: '.$gatewayReference)
-            );  
+                __(
+                    'Error issuing refund - '.$response->error.
+                    ' Transaction Ref: '.$transactionId.
+                    ' Gateway Ref: '.$gatewayReference
+                )
+            );
         }
     
         $order->addStatusHistoryComment(
@@ -662,13 +757,27 @@ class Api extends \Magento\Framework\Model\AbstractModel
         ->save();
     }
     
-    function captureLCOrder($order, $transactionId, $gatewayReference, $amount, $reason){
+    /**
+     * Process Capture order to LC API
+     * 
+     * @param object $order
+     * @param string $transactionId
+     * @param string $gatewayReference
+     * @param float $amount
+     * @param string $reason
+     */
+    public function captureLCOrder($order, $transactionId, $gatewayReference, $amount, $reason)
+    {
         $this->helper->log('****** INITIATING LC CAPTURE ******', 'latitude');
     
         //get specific payment method to refund
         $storeId = $order->getStore()->getId();
         $isTest = (boolean)($this->helper->getConfigData('test_mode', null, 'latitude') === '1');
-        $gatewayUrl = $this->helper->getConfigData($isTest ? 'api_url_sandbox' : 'api_url_production', null, 'latitude');
+        $gatewayUrl = $this->helper->getConfigData(
+            $isTest ? 'api_url_sandbox' : 'api_url_production',
+            null,
+            'latitude'
+        );
         $merchantId = $this->helper->getConfigData('merchant_id', null, 'latitude');
         $merchantSk = $this->helper->getConfigData('merchant_secret', null, 'latitude');
       
@@ -684,19 +793,19 @@ class Api extends \Magento\Framework\Model\AbstractModel
             'platformType' => 'magento2'
         ];
     
-        $bodyStr = json_encode($body,JSON_UNESCAPED_SLASHES);
+        $bodyStr = json_encode($body, JSON_UNESCAPED_SLASHES);
         $this->helper->log("Body String: $bodyStr", 'latitude');
     
         $url = "$gatewayUrl/capture";
     
-        $options = array(
+        $options = [
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_ENCODING       => "",
             CURLOPT_FOLLOWLOCATION => true,
             CURLOPT_MAXREDIRS      => 10,
             CURLOPT_TIMEOUT        => 30
-        );
-        
+        ];
+
         $baseUrl =  $this->storeManager->getStore()->getBaseUrl();
         $headers = [
             'Authorization' => 'Basic ' . base64_encode("$merchantId:$merchantSk"),
@@ -707,17 +816,36 @@ class Api extends \Magento\Framework\Model\AbstractModel
         
         $response = $this->helper->makecurlCall($url, $options, $headers, false, $bodyStr, true, 'latitude');
     
-        if ($response->status !== 200){
-            $this->helper->log("Error capturing payment with status: $response->status, Transaction Ref: $transactionId, Gateway Ref: $gatewayReference", 'latitude');
+        if ($response->status !== 200) {
+            $this->helper->log(
+                "Error capturing payment with status: $response->status".
+                ", Transaction Ref: $transactionId".
+                ", Gateway Ref: $gatewayReference",
+                'latitude'
+            );
             throw new \Magento\Framework\Exception\LocalizedException(
-                __('Error capturing payment - '.$response->status.' Transaction Id: '.$transactionId.' Gateway Ref: '.$gatewayReference)
-            );  
+                __(
+                    'Error capturing payment - '.$response->status.
+                    ' Transaction Id: '.$transactionId.
+                    ' Gateway Ref: '.$gatewayReference
+                )
+            );
         }
-        if ($response->error !== ""){
-            $this->helper->log("Error capturing payment - $response->error, Transaction Ref: $transactionId, Gateway Ref: $gatewayReference", 'latitude');
+
+        if ($response->error !== "") {
+            $this->helper->log(
+                "Error capturing payment - $response->error".
+                ", Transaction Ref: $transactionId".
+                ", Gateway Ref: $gatewayReference",
+                'latitude'
+            );
             throw new \Magento\Framework\Exception\LocalizedException(
-                __('Error capturing payment - '.$response->error.' Transaction Id: '.$transactionId.' Gateway Ref: '.$gatewayReference)
-            );  
+                __(
+                    'Error capturing payment - '.$response->error.
+                    ' Transaction Id: '.$transactionId.
+                    ' Gateway Ref: '.$gatewayReference
+                )
+            );
         }
     
         $order->addStatusHistoryComment(
@@ -727,13 +855,26 @@ class Api extends \Magento\Framework\Model\AbstractModel
         ->save();
     }
     
-    function voidLCOrder($order, $transactionId, $gatewayReference, $amount){
+    /**
+     * Process Void order to LC API
+     * 
+     * @param object $order
+     * @param string $transactionId
+     * @param string $gatewayReference
+     * @param float $amount
+     */
+    public function voidLCOrder($order, $transactionId, $gatewayReference, $amount)
+    {
         $this->helper->log('****** INITIATING LC VOID ******', 'latitude');
     
         //get specific payment method to refund
         $storeId = $order->getStore()->getId();
         $isTest = (boolean)($this->helper->getConfigData('test_mode', null, 'latitude') === '1');
-        $gatewayUrl = $this->helper->getConfigData($isTest ? 'api_url_sandbox' : 'api_url_production', null, 'latitude');
+        $gatewayUrl = $this->helper->getConfigData(
+            $isTest ? 'api_url_sandbox' : 'api_url_production',
+            null,
+            'latitude'
+        );
         $merchantId = $this->helper->getConfigData('merchant_id', null, 'latitude');
         $merchantSk = $this->helper->getConfigData('merchant_secret', null, 'latitude');
       
@@ -749,19 +890,19 @@ class Api extends \Magento\Framework\Model\AbstractModel
             'platformType' => 'magento2'
         ];
     
-        $bodyStr = json_encode($body,JSON_UNESCAPED_SLASHES);
+        $bodyStr = json_encode($body, JSON_UNESCAPED_SLASHES);
         $this->helper->log("Body String: $bodyStr", 'latitude');
     
         $url = "$gatewayUrl/void";
     
-        $options = array(
+        $options = [
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_ENCODING       => "",
             CURLOPT_FOLLOWLOCATION => true,
             CURLOPT_MAXREDIRS      => 10,
             CURLOPT_TIMEOUT        => 30
-        );
-        
+        ];
+
         $baseUrl =  $this->storeManager->getStore()->getBaseUrl();
         $headers = [
             'Authorization' => 'Basic ' . base64_encode("$merchantId:$merchantSk"),
@@ -772,26 +913,47 @@ class Api extends \Magento\Framework\Model\AbstractModel
         
         $response = $this->helper->makecurlCall($url, $options, $headers, false, $bodyStr, true, 'latitude');
     
-        if ($response->status !== 200){
-            $this->helper->log("Error voiding payment with status: $response->status, Transaction Ref: $transactionId, Gateway Ref: $gatewayReference", 'latitude');
+        if ($response->status !== 200) {
+            $this->helper->log(
+                "Error voiding payment with status: $response->status".
+                ", Transaction Ref: $transactionId".
+                ", Gateway Ref: $gatewayReference", 
+                'latitude'
+            );
+
             throw new \Magento\Framework\Exception\LocalizedException(
-                __('Error voiding payment - '.$response->error.' Transaction Id: '.$transactionId.' Gateway Ref: '.$gatewayReference)
-            );  
+                __(
+                    'Error voiding payment - '.$response->error.
+                    ' Transaction Id: '.$transactionId.
+                    ' Gateway Ref: '.$gatewayReference
+                )
+            );
         }
-        if ($response->error !== ""){
-            $this->helper->log("Error voiding payment - $response->error, Transaction Ref: $transactionId, Gateway Ref: $gatewayReference", 'latitude');
+
+        if ($response->error !== "") {
+            $this->helper->log(
+                "Error voiding payment - $response->error".
+                ", Transaction Ref: $transactionId".
+                ", Gateway Ref: $gatewayReference",
+                'latitude'
+            );
+
             throw new \Magento\Framework\Exception\LocalizedException(
-                __('Error voiding payment - '.$response->error.' Transaction Id: '.$transactionId.' Gateway Ref: '.$gatewayReference)
-            );  
+                __(
+                    'Error voiding payment - '.$response->error.
+                    ' Transaction Id: '.$transactionId.
+                    ' Gateway Ref: '.$gatewayReference
+                )
+            );
         }
     
         $order->addStatusToHistory(
-            \Magento\Sales\Model\Order::STATE_CLOSED,             //status   
-            "Voided $$amount - Gateway Ref: $gatewayReference, Transaction Ref: $transactionId",     //comment, default ''
+            \Magento\Sales\Model\Order::STATE_CLOSED,             //status
+            "Voided $$amount - Gateway Ref: $gatewayReference".
+            ", Transaction Ref: $transactionId",
             false                                                   //isCustomerNotified, default false
         )
         ->setIsCustomerNotified(true)
         ->save();
     }
 }
-

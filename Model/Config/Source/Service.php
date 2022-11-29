@@ -9,9 +9,6 @@ namespace LatitudeNew\Payment\Model\Config\Source;
 
 use Magento\Framework\Data\OptionSourceInterface;
 
-/**
- * Class Service
- */
 class Service implements OptionSourceInterface
 {
     /**
@@ -20,7 +17,7 @@ class Service implements OptionSourceInterface
     private $options;
 
     /**
-     * {@inheritdoc}
+     * @inheritdoc
      */
     public function toOptionArray()
     {

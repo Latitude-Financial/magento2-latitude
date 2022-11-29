@@ -7,13 +7,9 @@ declare(strict_types=1);
 
 namespace LatitudeNew\Payment\Model\Config\Source;
 
-
 use Magento\Cms\Model\ResourceModel\Block\CollectionFactory;
 use Magento\Framework\Data\OptionSourceInterface;
 
-/**
- * Class Layout
- */
 class Layout implements OptionSourceInterface
 {
     /**
@@ -22,7 +18,7 @@ class Layout implements OptionSourceInterface
     private $options;
 
     /**
-     * {@inheritdoc}
+     * @inheritdoc
      */
     public function toOptionArray()
     {

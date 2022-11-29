@@ -21,12 +21,18 @@ Tested up to: Magento 2.4.5.
 
 ## Changelog
 
-### 3.0.6
-- 16 November 2022
-- update curl options and header to mimic LC's original plugin
+### 3.0.7
+- 29 November 2022
+- Phpcs updates for marketplace
+- Capture logic update to work with M2's unexpected float values
+- Billing address form on IF checkout
 
 <details>
 <summary>Older versions</summary>
+
+### 3.0.6
+- 16 November 2022
+- update curl options and header to mimic LC's original plugin
 
 ### 3.0.5
 - 16 November 2022

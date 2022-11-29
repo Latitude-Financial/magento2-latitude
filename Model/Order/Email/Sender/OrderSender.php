@@ -48,10 +48,10 @@ class OrderSender extends \Magento\Sales\Model\Order\Email\Sender\OrderSender
      * @param OrderIdentity $identityContainer
      * @param Order\Email\SenderBuilderFactory $senderBuilderFactory
      * @param \Psr\Log\LoggerInterface $logger
+     * @param Renderer $addressRenderer
      * @param PaymentHelper $paymentHelper
      * @param OrderResource $orderResource
      * @param \Magento\Framework\App\Config\ScopeConfigInterface $globalConfig
-     * @param Renderer $addressRenderer
      * @param ManagerInterface $eventManager
      */
     public function __construct(
@@ -92,7 +92,7 @@ class OrderSender extends \Magento\Sales\Model\Order\Email\Sender\OrderSender
     {
         $code = $order->getPayment()->getMethodInstance()->getCode();
         $status = $order->getState();
-        if (($code == 'latitudepay' || $code == 'genoapay') && $status == 'new') {
+        if (($code === 'latitudepay' || $code === 'genoapay' || $code === 'latitude') && $status == 'new') {
             return false;
         }
 

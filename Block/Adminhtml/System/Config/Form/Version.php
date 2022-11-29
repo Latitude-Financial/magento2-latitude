@@ -1,13 +1,20 @@
 <?php
 namespace LatitudeNew\Payment\Block\Adminhtml\System\Config\Form;
 
+/**
+ * Version renderer for Latitude solution
+ */
 class Version extends \Magento\Config\Block\System\Config\Form\Field
 {
+    /**
+     * @var \LatitudeNew\Payment\Helper\Data
+     */
     protected $helper;
 
     /**
      * Version constructor.
-     * @param Context $context
+     * @param \Magento\Backend\Block\Template\Context $context
+     * @param \LatitudeNew\Payment\Helper\Data $helper
      * @param array $data
      */
     public function __construct(

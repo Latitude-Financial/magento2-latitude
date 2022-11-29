@@ -44,11 +44,15 @@ class Callback extends \Magento\Framework\App\Action\Action
      * @var \Magento\Checkout\Model\Session
      */
     protected $checkoutSession;
+    
     /**
      * @var \LatitudeNew\Payment\Model\ValidateOrder
      */
     private $validator;
 
+    /**
+     * @var \Magento\Quote\Model\QuoteFactory
+     */
     protected $quoteFactory;
 
     /**
@@ -57,11 +61,12 @@ class Callback extends \Magento\Framework\App\Action\Action
      * @param \Magento\Framework\App\Action\Context $context
      * @param \LatitudeNew\Payment\Helper\Data $helper
      * @param \Magento\Sales\Model\Order\Email\Sender\OrderSender $sendEmail
-     * @param \Magento\Sales\Model\Order $orderFactory
      * @param \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig
+     * @param \Magento\Sales\Model\Service\InvoiceService $invoiceService
      * @param \Magento\Framework\DB\Transaction $transaction
-     * @param \LatitudeNew\Payment\Model\Api $latitudeApi
+     * @param \LatitudeNew\Payment\Model\ValidateOrder $validateOrder
      * @param \Magento\Checkout\Model\Session $checkoutSession
+     * @param \Magento\Quote\Model\QuoteFactory $quoteFactory
      */
     public function __construct(
         \Magento\Framework\App\Action\Context $context,
@@ -89,10 +94,11 @@ class Callback extends \Magento\Framework\App\Action\Action
      * Save Transaction
      *
      * @param \Magento\Sales\Model\Order $order
-     * @param Array $param - request parameters
+     * @param object $param
      * @return void
      */
-    protected function saveTransaction($order, $param) {
+    protected function saveTransaction($order, $param)
+    {
         $this->helper->log('****** SAVING TRANSACTION ******');
         //change state from new to processing
         $order->setState(\Magento\Sales\Model\Order::STATE_PROCESSING);
@@ -107,23 +113,35 @@ class Callback extends \Magento\Framework\App\Action\Action
             null,        //salesDocument, default null
             false        //failSafe, default false
         );
-        $transaction->setAdditionalInformation(\Magento\Sales\Model\Order\Payment\Transaction::TRANSACTION_ID , $param['token']);
+        $transaction->setAdditionalInformation(
+            \Magento\Sales\Model\Order\Payment\Transaction::TRANSACTION_ID,
+            $param['token']
+        );
         $transaction->setIsClosed(0);
         $transaction->save();
         
         $latitudeRef = $order->getCustomerNote();
         //add comment along and update status to processing
         $order->addStatusToHistory(
-            \Magento\Sales\Model\Order::STATE_PROCESSING,                                                   //status   
-            $param['message']." Transaction Id: ".$param['token']." Payment Reference: ".$latitudeRef,     //comment, default ''
-            true                                                                                            //isCustomerNotified, default false
+            \Magento\Sales\Model\Order::STATE_PROCESSING, //status
+            $param['message'].
+            " Transaction Id: ".$param['token'].
+            " Payment Reference: ".$latitudeRef,     //comment, default ''
+            true  //isCustomerNotified, default false
         );
         $order->save();
 
         $this->sendEmail->send($order, true); //forceSyncMode default false, true = Email will be sent immediately
     }
 
-    protected function onFail($param, $order){
+    /**
+     * In case of failed payment
+     * 
+     * @param object $param
+     * @param object $order
+     */
+    protected function onFail($param, $order)
+    {
         $this->helper->log('****** FAILED URL ******');
         $quote = $this->quoteFactory->create()->loadByIdWithoutStore($order->getQuoteId());
         if ($quote->getId()) {
@@ -134,10 +152,10 @@ class Callback extends \Magento\Framework\App\Action\Action
             $this->checkoutSession->replaceQuote($quote);
             $this->checkoutSession->setQuoteId($order->getQuoteId());
             $this->checkoutSession->setLastOrderId($order->getId());
-            //supposed to be used by getLastRealOrder() to retrieve this order in handoverurl/index.php 
+            //supposed to be used by getLastRealOrder() to retrieve this order in handoverurl/index.php
             //https://www.magentoextensions.org/documentation/class_magento_1_1_checkout_1_1_model_1_1_session.html#a858077761ba432c5496e062867a53542
             //but PlaceOrder in the method-renderer would override this and create new order anyway
-            $this->checkoutSession->setLastRealOrderId($order->getIncrementId()); 
+            $this->checkoutSession->setLastRealOrderId($order->getIncrementId());
 
             //Set transaction id
             $payment = $order->getPayment();
@@ -145,20 +163,23 @@ class Callback extends \Magento\Framework\App\Action\Action
 
             //add transaction
             $transaction = $payment->addTransaction(
-                \Magento\Sales\Model\Order\Payment\Transaction::TYPE_CAPTURE, //https://community.magento.com/t5/Magento-DevBlog/The-Magento-Sale-Payment-Operation/ba-p/67251#:~:text=Capture%20transaction%20%E2%80%93%20a%20transaction%20that,on%20the%20customer's%20credit%20card.
+                \Magento\Sales\Model\Order\Payment\Transaction::TYPE_CAPTURE,
                 null,
-                false                
+                false            
             );
-            $transaction->setAdditionalInformation(\Magento\Sales\Model\Order\Payment\Transaction::ADDITIONAL_INFORMATION,'Quote ID: '.$order->getQuoteId());
+            $transaction->setAdditionalInformation(
+                \Magento\Sales\Model\Order\Payment\Transaction::ADDITIONAL_INFORMATION, 
+                'Quote ID: '.$order->getQuoteId()
+            );
             $transaction->setIsClosed(0);
             $transaction->save();
 
             //add comment and update status to cancelled
             $order->addStatusToHistory(
-                \Magento\Sales\Model\Order::STATE_CANCELED,             //status   
+                \Magento\Sales\Model\Order::STATE_CANCELED,             //status 
                 $param['message'].' Transaction ID: '.$param['token'],  //comment, default ''
                 false                                                   //isCustomerNotified, default false
-            );            
+            );       
             $order->save();
           
             //setup redirect to cart
@@ -168,14 +189,17 @@ class Callback extends \Magento\Framework\App\Action\Action
         }
     }
     
-    public function execute() {
+    /**
+     * Main callback function
+     */
+    public function execute()
+    {
         $this->helper->log('****** CALLBACK METHOD TRIGGERED ******');
         //get client secret from config
         $clientSecret = $this->helper->getConfigData('client_secret');
         
         //make sure order id is not empty
-        if ($this->getRequest()->getParam('reference') === null)
-        {
+        if ($this->getRequest()->getParam('reference') === null) {
             $this->messageManager->addWarningMessage('One or more parameter is missing');
             $this->_redirect('checkout/onepage/failure');
             return;
@@ -192,8 +216,7 @@ class Callback extends \Magento\Framework\App\Action\Action
         $this->helper->log('PARAMETERS - ' . json_encode($param));
 
         //validate query param, if mismatch, send back to cart with warning message
-        if(!$this->validator->verifyResponse($param, $clientSecret))
-        {
+        if (!$this->validator->verifyResponse($param, $clientSecret)) {
             $this->messageManager->addWarningMessage("Invalid Signature");
             $this->_redirect('checkout/onepage/failure');
             return;
@@ -242,18 +265,15 @@ class Callback extends \Magento\Framework\App\Action\Action
 
                         $this->_redirect('checkout/onepage/success');
                     }
-                } 
-                else {
+                } else {
                     $this->helper->log('****** Invalid order update request ******');
                     $this->messageManager->addWarningMessage('Invalid order update request');
                     $this->_redirect('checkout/onepage/failure');
                 }
-            } 
-            else if ($param['result'] == 'FAILED')  {
+            } elseif ($param['result'] == 'FAILED') {
                 $this->onFail($param, $order);
             }
-        } 
-        else {
+        } else {
             $this->helper->log('****** Order not found ******');
             $this->messageManager->addWarningMessage('Order not found');
             $this->_redirect('checkout/onepage/failure');

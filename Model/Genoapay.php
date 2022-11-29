@@ -13,7 +13,7 @@ use Magento\Directory\Helper\Data as DirectoryHelper;
 class Genoapay extends \Magento\Payment\Model\Method\AbstractMethod
 {
     
-    const PAYMENT_METHOD_GENOAPAY_CODE = 'genoapay';
+    public const PAYMENT_METHOD_GENOAPAY_CODE = 'genoapay';
 
     /**
      * Payment method code
@@ -23,7 +23,10 @@ class Genoapay extends \Magento\Payment\Model\Method\AbstractMethod
 
     protected $_code = self::PAYMENT_METHOD_GENOAPAY_CODE;
 
-    protected $_supportedCurrencyCodes = array('NZD');
+    /**
+     * @var array
+     */
+    protected $_supportedCurrencyCodes = ['NZD'];
 
     /**
      * Genoapay payment block paths
@@ -103,12 +106,13 @@ class Genoapay extends \Magento\Payment\Model\Method\AbstractMethod
     protected $_canReviewPayment           = true;
 
     /**
-     * Get instructions text from config
-     *
-     * @return string
-     */    
+     * @var \LatitudeNew\Payment\Model\Api
+     */
     protected $latitudeApi;
 
+    /**
+     * @var \Magento\Store\Model\StoreManagerInterface
+     */
     protected $storeManager;
     
     /**
@@ -122,6 +126,7 @@ class Genoapay extends \Magento\Payment\Model\Method\AbstractMethod
      * @param \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig
      * @param \Magento\Payment\Model\Method\Logger $logger
      * @param \LatitudeNew\Payment\Model\Api $latitudeApi
+     * @param \Magento\Store\Model\StoreManagerInterface $storeManager
      * @param \Magento\Framework\Model\ResourceModel\AbstractResource $resource
      * @param \Magento\Framework\Data\Collection\AbstractDb $resourceCollection
      * @param array $data
@@ -169,9 +174,6 @@ class Genoapay extends \Magento\Payment\Model\Method\AbstractMethod
         return trim($this->getConfigData('instructions'));
     }
 
-     /**
-     * @inheritdoc
-     */
     /**
      * Availability for currency
      *
@@ -200,16 +202,19 @@ class Genoapay extends \Magento\Payment\Model\Method\AbstractMethod
     public function isActive($storeId = null)
     {
         return (bool)(int)$this->_scopeConfig->getValue(
-                'payment/genoapay/active',
-                \Magento\Store\Model\ScopeInterface::SCOPE_STORE,
-                $storeId
+            'payment/genoapay/active',
+            \Magento\Store\Model\ScopeInterface::SCOPE_STORE,
+            $storeId
         ) && (bool)(int)$this->getConfigData('active', $storeId);
     }
 
+    /**
+     * Check if Genoapay is available
+     */
     public function isAvailable(\Magento\Quote\Api\Data\CartInterface $quote = null)
     {
         //@TODO:
-        //1. check if API crediential coorect.
+        //1. check if API crediential corect.
         //2. check currency is correct again
         //3. check quote amount is correct.
         return $this->isActive() && $quote && ($quote->getGrandTotal() >= 20);
@@ -219,7 +224,7 @@ class Genoapay extends \Magento\Payment\Model\Method\AbstractMethod
      * Refund (override from \Magento\Payment\Model\Method\AbstractMethod)
      *
      * @param \Magento\Payment\Model\InfoInterface $payment
-     * @param float $amount 
+     * @param float $amount
      * @return $this
      */
     public function refund(\Magento\Payment\Model\InfoInterface $payment, $amount)
@@ -227,23 +232,27 @@ class Genoapay extends \Magento\Payment\Model\Method\AbstractMethod
         $order = $payment->getOrder();
         $transId = $payment->getParentTransactionId();
 
-        if (!$transId)
+        if (!$transId){
             throw new \Magento\Framework\Exception\LocalizedException(
                 __('Error issuing refund - no Transaction Id')
             );
-        
+        }
+
         $grand_total = $order->getGrandTotal();
         $total_refunded = $order->getTotalRefunded();
         $refunded_amt = $grand_total - $total_refunded;
+
         if ($refunded_amt == 0) {
             $refundStatus = 'Full Refund';
-        } 
-        else if ($refunded_amt < 0) {
+        } elseif ($refunded_amt < 0) {
             throw new \Magento\Framework\Exception\LocalizedException(
-                __('Error issuing refund - Grandtotal: '.$grand_total.', Total Refunded: '.$total_refunded.', Amount: '.$amount)
+                __(
+                    'Error issuing refund - Grandtotal: '.$grand_total.
+                    ', Total Refunded: '.$total_refunded.
+                    ', Amount: '.$amount
+                )
             );
-        }
-        else {
+        } else {
             $refundStatus = 'Partial Refund';
         }
 

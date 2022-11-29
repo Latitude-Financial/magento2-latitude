@@ -5,24 +5,26 @@
  */
 namespace LatitudeNew\Payment\Block\System\Config;
 
+/**
+ * Generate checkbox for admin form
+ */
 class Checkbox extends \Magento\Config\Block\System\Config\Form\Field
 {
-    const CONFIG_PATH = 'payment/latitudepay/payment_terms';
+    /**
+     * @var string
+     */
+    protected const CONFIG_PATH = 'payment/latitudepay/payment_terms';
 
+    /**
+     * @var string
+     */
     protected $_template = 'LatitudeNew_Payment::system/config/checkbox.phtml';
 
-    protected $_values = null;
     /**
-     * @param \Magento\Backend\Block\Template\Context $context
-     * @param \Magento\Config\Model\Config\Structure $configStructure
-     * @param array $data
+     * Possible values for the checkboxes
      */
-    public function __construct(
-        \Magento\Backend\Block\Template\Context $context,
-        array $data = []
-    ) {
-        parent::__construct($context, $data);
-    }
+    protected $_values = null;
+   
     /**
      * Retrieve element HTML markup.
      *
@@ -38,33 +40,38 @@ class Checkbox extends \Magento\Config\Block\System\Config\Form\Field
         return $this->_toHtml();
     }
     
+    /**
+     * Get checkbox values
+     */
     public function getValues()
     {
         $values = [];
         $objectManager = \Magento\Framework\App\ObjectManager::getInstance();
 
-        foreach ($objectManager->create('LatitudeNew\Payment\Model\Config\Source\Term')->toOptionArray() as $value) {
+        foreach ($objectManager->create(\LatitudeNew\Payment\Model\Config\Source\Term::class)->toOptionArray() as $value) {
             $values[$value['value']] = $value['label'];
         }
 
         return $values;
     }
+
     /**
+     * Whether a checkbox is checked
      * 
-     * @param  $name 
+     * @param  string $name 
      * @return boolean
      */
     public function isChecked($name)
     {
         return in_array($name, $this->getCheckedValues());
     }
+
     /**
-     * 
-     *get the checked value from config
+     * Get the checked value from config
      */
     public function getCheckedValues()
     {
-        if (is_null($this->_values)) {
+        if ($this->_values === null) {
             $data = $this->getConfigData();
             if (isset($data[self::CONFIG_PATH])) {
                 $data = $data[self::CONFIG_PATH];

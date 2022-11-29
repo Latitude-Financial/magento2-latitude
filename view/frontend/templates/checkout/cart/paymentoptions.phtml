@@ -1,39 +1,39 @@
-<?php
-$_helper    = $this->helper('LatitudeNew\Payment\Helper\Data');
-?>
-    <div class="latitudepayments-popup">
-        <div class="latitude-icon <?php echo ($block->showOnCart() == 0 ? 'hide' : '') ?>" >
-            <span class="latitudepayments-popup__installment-text">
-                <img class="lpay_snippet" src="<?=/* @escapeNotVerified */ $block->getSnippetImage() ?>" alt="LatitudePay" style="cursor: pointer;">
-            </span>
-            <script src="<?=$block->getUtilJs()?>"></script>
-        </div>
+<div class="latitudepayments-popup">
+    <div class="latitude-icon <?=/* @noEscape */ ($block->showOnCart() == 0 ? 'hide' : '') ?>" >
+        <span class="latitudepayments-popup__installment-text">
+            <img
+                class="lpay_snippet"
+                src="<?=/* @noEscape */ $block->getSnippetImage() ?>"
+                alt="LatitudePay"
+                style="cursor: pointer;"
+            >
+        </span>
+        <script src="<?=/* @noEscape */ $block->getUtilJs()?>"></script>
     </div>
+</div>
 
-    <?php if ($block->showOnCart('latitude') == 1): ?>
-        <div id="latitude-banner-container" ></div>
-    <?php endif; ?>
+<?php if ($block->showOnCart('latitude') == 1): ?>
+    <div id="latitude-banner-container" ></div>
+<?php endif; ?>
 
-    <script>
-           window.LatitudeCheckout = <?php echo $block->getLCOptions('product'); ?>;
-           (function () {
-                function asyncLoad() {
-                    var curr = document.createElement("script");
-                    curr.type = "text/javascript";
-                    curr.async = true;
-                    curr.src = "<?=$block->getLCHost()?>/assets/content.js?platform=magento2&merchantId=<?=$block->getLCMerchantID()?>";
-                
-                    var scr = document.getElementsByTagName("script")[0];
-                    scr.parentNode.insertBefore(curr, scr);
-                }
-                
-                if (window.attachEvent) {
-                    window.attachEvent("onload", asyncLoad);
-                } else {
-                    window.addEventListener("load", asyncLoad, false);
-                }
-            })();
-    </script>
-
-
-
+<script>
+        window.LatitudeCheckout = <?=/* @noEscape */ $block->getLCOptions('product'); ?>;
+        (function () {
+            function asyncLoad() {
+                var curr = document.createElement("script");
+                curr.type = "text/javascript";
+                curr.async = true;
+                var endpoint = '/assets/content.js?platform=magento2&merchantId=';
+                curr.src = `<?=/* @noEscape */ $block->getLCHost()?>${endpoint}<?=/* @noEscape */ $block->getLCMerchantID()?>`;
+            
+                var scr = document.getElementsByTagName("script")[0];
+                scr.parentNode.insertBefore(curr, scr);
+            }
+            
+            if (window.attachEvent) {
+                window.attachEvent("onload", asyncLoad);
+            } else {
+                window.addEventListener("load", asyncLoad, false);
+            }
+        })();
+</script>

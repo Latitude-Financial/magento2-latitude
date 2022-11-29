@@ -41,10 +41,11 @@ class Index extends \Magento\Framework\App\Action\Action
     /**
      * Method Execute
      */
-    public function execute() {
-       $token = $this->latitudeApi->requestAuthToken();
+    public function execute()
+    {
+        $token = $this->latitudeApi->requestAuthToken();
 
-       try{
+        try {
             if ($this->session->getLastRealOrder() && $token !== null) {
                 $url = $this->latitudeApi->createOnlinePurchase($token, $this->session->getLastRealOrder());
 
@@ -58,8 +59,7 @@ class Index extends \Magento\Framework\App\Action\Action
             }
             //$this->messageManager->addError(__("Invalid Gateway Credentials"));
             return $this->resultRedirectFactory->create()->setPath('checkout/onepage/failure');
-        }
-        catch (\Exception $e){
+        } catch (\Exception $e) {
             //$this->messageManager->addError(__(sprintf("Error creating purchase : %s", $e->getMessage())));
             return $this->resultRedirectFactory->create()->setPath('checkout/onepage/failure');
         }

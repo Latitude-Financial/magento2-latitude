@@ -21,43 +21,85 @@ use Magento\Sales\Api\CreditmemoManagementInterface as CreditmemoManager;
  */
 class Payment extends \Magento\Sales\Model\Order\Payment
 {
-    const REVIEW_ACTION_ACCEPT = 'accept';
+    public const REVIEW_ACTION_ACCEPT = 'accept';
  
-     const REVIEW_ACTION_DENY = 'deny';
- 
-     const REVIEW_ACTION_UPDATE = 'update';
- 
-     const PARENT_TXN_ID = 'parent_transaction_id';
- 
-     protected $_order;
- 
-     protected $_canVoidLookup = null;
- 
-     protected $_eventPrefix = 'sales_order_payment';
- 
-     protected $_eventObject = 'payment';
- 
-     protected $transactionAdditionalInfo = [];
- 
-     protected $creditmemoFactory;
- 
-     protected $priceCurrency;
- 
-     protected $transactionRepository;
- 
-     protected $transactionManager;
- 
-     protected $transactionBuilder;
- 
-     protected $orderPaymentProcessor;
- 
-     protected $orderRepository;
- 
-     private $orderStateResolver;
- 
-     private $creditmemoManager = null;
+    public const REVIEW_ACTION_DENY = 'deny';
 
-     /**
+    public const REVIEW_ACTION_UPDATE = 'update';
+
+    public const PARENT_TXN_ID = 'parent_transaction_id';
+
+    /**
+     * @var object
+     */
+    protected $_order;
+
+    /**
+     * @var boolean
+     */
+    protected $_canVoidLookup = null;
+
+    /**
+     * @var string
+     */
+    protected $_eventPrefix = 'sales_order_payment';
+
+    /**
+     * @var string
+     */
+    protected $_eventObject = 'payment';
+
+    /**
+     * @var array
+     */
+    protected $transactionAdditionalInfo = [];
+
+    /**
+     * @var \Magento\Sales\Model\Order\CreditmemoFactory
+     */
+    protected $creditmemoFactory;
+
+    /**
+     * @var PriceCurrencyInterface
+     */
+    protected $priceCurrency;
+
+    /**
+     * @var \Magento\Sales\Api\TransactionRepositoryInterface
+     */
+    protected $transactionRepository;
+
+    /**
+     * @var ManagerInterface
+     */
+    protected $transactionManager;
+
+    /**
+     * @var \Magento\Sales\Model\Order\Payment\Transaction\BuilderInterface
+     */
+    protected $transactionBuilder;
+
+    /**
+     * @var \Magento\Sales\Model\Order\Payment\Processor
+     */
+    protected $orderPaymentProcessor;
+
+    /**
+     * @var object
+     */
+    private $orderStateResolver;
+
+    /**
+     * @var OrderRepositoryInterface
+     */
+    protected $orderRepository;
+
+    /**
+     * @var CreditmemoManager
+     */
+    private $creditmemoManager = null;
+
+    /**
      * @param \Magento\Framework\Model\Context $context
      * @param \Magento\Framework\Registry $registry
      * @param \Magento\Framework\Api\ExtensionAttributesFactory $extensionFactory
@@ -124,54 +166,58 @@ class Payment extends \Magento\Sales\Model\Order\Payment
         );
     }
 
-     /**
+    /**
      * Void (override from \Magento\Sales\Model\Order\Payment)
+     * 
+     * @param boolean $isOnline
+     * @param float $amount
+     * @param string $gatewayCallback
      */
     protected function _void($isOnline, $amount = null, $gatewayCallback = 'void')
-     {
-         $order = $this->getOrder();
-         $authTransaction = $this->getAuthorizationTransaction();
-         $this->setTransactionId(
-             $this->transactionManager->generateTransactionId($this, Transaction::TYPE_VOID, $authTransaction)
-         );
-         $this->setShouldCloseParentTransaction(true);
- 
-         // attempt to void
-         if ($isOnline) {
-             $method = $this->getMethodInstance();
-             $method->setStore($order->getStoreId());
-             $method->{$gatewayCallback}($this);
-         }
-         if ($this->checkIfTransactionExists()) {
-             return $this;
-         }
- 
-         // if the authorization was untouched, we may assume voided amount = order grand total
-         // but only if the payment auth amount equals to order grand total
-         if ($authTransaction &&
-             $order->getBaseGrandTotal() == $this->getBaseAmountAuthorized() &&
-             0 == $this->getBaseAmountCanceled()
-         ) {
-             if ($authTransaction->canVoidAuthorizationCompletely()) {
-                 $amount = (double)$order->getBaseGrandTotal();
-             }
-         }
- 
-         if ($amount) {
-             $amount = $this->formatAmount($amount);
-         }
- 
-         // update transactions, order state and add comments
-         $transaction = $this->addTransaction(Transaction::TYPE_VOID, null, true);
-         $message = $this->hasMessage() ? $this->getMessage() : __('Voided authorization.');
-         $message = $this->prependMessage($message);
-         if ($amount) {
-             $message .= ' ' . __('Amount: %1.', $this->formatPrice($amount));
-         }
-         $message = $this->_appendTransactionToMessage($transaction, $message);
-         //$this->setOrderStateProcessing($message);
-         $order->setDataChanges(true);
- 
-         return $this;
-     }
+    {
+        $order = $this->getOrder();
+        $authTransaction = $this->getAuthorizationTransaction();
+        $this->setTransactionId(
+            $this->transactionManager->generateTransactionId($this, Transaction::TYPE_VOID, $authTransaction)
+        );
+        $this->setShouldCloseParentTransaction(true);
+
+        // attempt to void
+        if ($isOnline) {
+            $method = $this->getMethodInstance();
+            $method->setStore($order->getStoreId());
+            $method->{$gatewayCallback}($this);
+        }
+        if ($this->checkIfTransactionExists()) {
+            return $this;
+        }
+
+        // if the authorization was untouched, we may assume voided amount = order grand total
+        // but only if the payment auth amount equals to order grand total
+        if ($authTransaction &&
+            $order->getBaseGrandTotal() == $this->getBaseAmountAuthorized() &&
+            0 == $this->getBaseAmountCanceled()
+        ) {
+            if ($authTransaction->canVoidAuthorizationCompletely()) {
+                $amount = (double)$order->getBaseGrandTotal();
+            }
+        }
+
+        if ($amount) {
+            $amount = $this->formatAmount($amount);
+        }
+
+        // update transactions, order state and add comments
+        $transaction = $this->addTransaction(Transaction::TYPE_VOID, null, true);
+        $message = $this->hasMessage() ? $this->getMessage() : __('Voided authorization.');
+        $message = $this->prependMessage($message);
+        if ($amount) {
+            $message .= ' ' . __('Amount: %1.', $this->formatPrice($amount));
+        }
+        $message = $this->_appendTransactionToMessage($transaction, $message);
+        //Removed this from the default: $this->setOrderStateProcessing($message);
+        $order->setDataChanges(true);
+
+        return $this;
+    }
 }

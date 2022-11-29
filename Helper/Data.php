@@ -47,34 +47,47 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
      */
     protected $code;
 
+    /**
+     * @var string
+     */
     protected $currentCurrencyCode;
 
+    /**
+     * @var array
+     */
     protected $supportedCurrencyCodes;
 
+    /**
+     * @var string
+     */
     protected $latitudepayCurrency;
 
+    /**
+     * @var string
+     */
     protected $genoapayCurrency ;
 
+    /**
+     * @var object
+     */
     protected $curl;
 
-    protected $latitudeReference;
     /**
      * Construct
      *
-     * @param \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig
      * @param \Magento\Store\Model\StoreManagerInterface $storeManager
      * @param \Magento\Framework\Message\ManagerInterface $messageManager
      * @param \Magento\Sales\Model\OrderFactory $orderFactoryCreate
      * @param \Magento\Framework\HTTP\Adapter\CurlFactory $curlFactory
-     * @param \LatitudeNew\Payment\Logger\Logger  $logger
+     * @param \LatitudeNew\Payment\Logger\Logger $logger
      * @param \Magento\Framework\App\Helper\Context $context
+     * @param \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig
      */
     public function __construct(
         \Magento\Store\Model\StoreManagerInterface $storeManager,
         \Magento\Framework\Message\ManagerInterface $messageManager,
         \Magento\Sales\Model\OrderFactory $orderFactoryCreate,
         \Magento\Framework\HTTP\Client\CurlFactory $curlFactory,
-        //\Psr\Log\LoggerInterface $logger,
         \LatitudeNew\Payment\Logger\Logger $logger,
         \Magento\Framework\App\Helper\Context $context,
         \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig
@@ -88,28 +101,38 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         $this->curlFactory = $curlFactory;
         $this->logger = $logger;
 
-        /** @noinspection PhpUnhandledExceptionInspection */
+        /* @noinspection PhpUnhandledExceptionInspection */
         //find out which currency store is using, and use that info to find out the app code latitudepay/genoapay
-        $this->currentCurrencyCode          =  $this->storeManager->getStore()->getCurrentCurrencyCode();
-        $this->latitudepayCurrency          =  $this->scopeConfig->getValue('payment/latitudepay/currency', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
-        $this->genoapayCurrency             =  $this->scopeConfig->getValue('payment/genoapay/currency', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
-        $this->supportedCurrencyCodes       = array($this->latitudepayCurrency=>'latitudepay',$this->genoapayCurrency=>'genoapay');
+        $this->currentCurrencyCode = $this->storeManager->getStore()->getCurrentCurrencyCode();
+        $this->latitudepayCurrency = $this->scopeConfig->getValue(
+            'payment/latitudepay/currency',
+            \Magento\Store\Model\ScopeInterface::SCOPE_STORE
+        );
+        $this->genoapayCurrency = $this->scopeConfig->getValue(
+            'payment/genoapay/currency',
+            \Magento\Store\Model\ScopeInterface::SCOPE_STORE
+        );
+        $this->supportedCurrencyCodes = [
+            $this->latitudepayCurrency => 'latitudepay',
+            $this->genoapayCurrency => 'genoapay'
+        ];
         if (isset($this->supportedCurrencyCodes[$this->currentCurrencyCode])) {
             $this->code = $this->supportedCurrencyCodes[$this->currentCurrencyCode];
         }
     }
 
-  /**
+    /**
      * Retrieve information from Latitudepay/Genoapay configuration
-     *@throws \Magento\Framework\Exception\LocalizedException
+     * 
+     * @throws \Magento\Framework\Exception\LocalizedException
      * @param string $field
      * @param int $storeId
      * @param string $methodCode
-     * @return  false|string
+     * @return false|string
      */
     public function getConfigData($field, $storeId = null, $methodCode = null)
     {
-        if($storeId == null){
+        if ($storeId == null) {
             $storeId  = $this->storeManager->getStore()->getId();
         }
 
@@ -124,70 +147,93 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
 
         $path = 'payment/' . $this->code . '/' . $field;
 
-        if($storeId){
-            return $this->scopeConfig->getValue( $path, \Magento\Store\Model\ScopeInterface::SCOPE_STORE,$storeId );
-        }else{
-            return $this->scopeConfig->getValue( $path, \Magento\Store\Model\ScopeInterface::SCOPE_STORE );
+        if ($storeId) {
+            return $this->scopeConfig->getValue($path, \Magento\Store\Model\ScopeInterface::SCOPE_STORE, $storeId);
+        } else {
+            return $this->scopeConfig->getValue($path, \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
         }
     }
 
     /**
      * Checks whether the Latitudepay payment method is enabled.
      *
-     * @param null $store
+     * @param string $store
      * @return mixed
      */
     public function isLatitudepayEnabled($store = null)
     {
-        return $this->scopeConfig->getValue('payment/latitudepay/active', \Magento\Store\Model\ScopeInterface::SCOPE_STORE, $store) && ($this->currentCurrencyCode == $this->latitudepayCurrency) ;
+        return $this->scopeConfig->getValue(
+            'payment/latitudepay/active',
+            \Magento\Store\Model\ScopeInterface::SCOPE_STORE,
+            $store
+        ) && ($this->currentCurrencyCode == $this->latitudepayCurrency) ;
     }
+
     /**
-     * get Genoapay Enabled
+     * Checks whether the Genoapay payment method is enabled.
      *
-     * @param null $store
+     * @param string $store
      * @return mixed
      */
     public function isGenoapayEnabled($store = null)
     {
-        return $this->scopeConfig->getValue('payment/genoapay/active', \Magento\Store\Model\ScopeInterface::SCOPE_STORE, $store) && ($this->currentCurrencyCode == $this->genoapayCurrency);
+        return $this->scopeConfig->getValue(
+            'payment/genoapay/active',
+            \Magento\Store\Model\ScopeInterface::SCOPE_STORE,
+            $store
+        ) && ($this->currentCurrencyCode == $this->genoapayCurrency);
     }
 
     /**
-     * get Genoapay Enabled
+     * Checks whether the LC payment method is enabled.
      *
-     * @param null $store
+     * @param string $store
      * @return mixed
      */
     public function isLCEnabled($store = null)
     {
-        return $this->scopeConfig->getValue('payment/latitude/active', \Magento\Store\Model\ScopeInterface::SCOPE_STORE, $store);
+        return $this->scopeConfig->getValue(
+            'payment/latitude/active',
+            \Magento\Store\Model\ScopeInterface::SCOPE_STORE,
+            $store
+        );
     }
 
-    public function getStoreCurrency(){
+    /**
+     * Retrieve store currency
+     */
+    public function getStoreCurrency()
+    {
         return $this->currentCurrencyCode;
     }
     
     /**
-     * @return bullean
+     * Retrieve logging boolean from config
+     * 
+     * @param string $methodCode
+     * @return boolean
      */
     public function isLogRequired($methodCode = null)
     {
-        if ($methodCode === 'latitude')
+        if ($methodCode === 'latitude') {
             return $this->getConfigData('debug_mode', null, $methodCode);
+        }
 
         return $this->getConfigData('logging');
     }
 
     /**
-     * @param $message
+     * Logging functionality
+     * 
+     * @param string $message
+     * @param string $methodCode
      * @return Mage_Log
      */
     public function log($message, $methodCode = null)
     {
-        if ($methodCode === 'latitude' && $this->isLogRequired($methodCode)){
+        if ($methodCode === 'latitude' && $this->isLogRequired($methodCode)) {
             $this->logger->info($message);
-        }
-        else if ($this->isLogRequired()) {
+        } elseif ($this->isLogRequired()) {
             $this->logger->info($message);
         }
         
@@ -195,9 +241,10 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
     }
 
     /**
-     * @param (int) $id
-     * @param (string) $hash
-     * @return $object
+     * Get order object based on incrementId
+     * 
+     * @param int $incrementId
+     * @return object
      */
     public function getOrderByIncrementId($incrementId)
     {
@@ -208,38 +255,45 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
     /**
      * Get Latitudepay Payment Services
      *
-     * @param null $store
+     * @param string $store
      * @return mixed
      */
     public function getLatitudepayPaymentServices($store = null)
     {
-        if($this->isGenoapayEnabled()){
+        if ($this->isGenoapayEnabled()) {
             return 'GPAY';
         }
 
-        if($this->isLatitudepayEnabled()){
-            if($this->scopeConfig->getValue('payment/latitudepay/payment_services', \Magento\Store\Model\ScopeInterface::SCOPE_STORE, $store)){
-                return $this->scopeConfig->getValue('payment/latitudepay/payment_services', \Magento\Store\Model\ScopeInterface::SCOPE_STORE, $store);
+        if ($this->isLatitudepayEnabled()) {
+            $services = $this->scopeConfig->getValue(
+                'payment/latitudepay/payment_services',
+                \Magento\Store\Model\ScopeInterface::SCOPE_STORE,
+                $store
+            );
+
+            if ($services) {
+                return $services;
             }
             return 'LPAY';
         }
 
-        if ($this->isLCEnabled()){
-            
-        }
         return '';
     }
 
     /**
      * Get Latitudepay Payment Terms
      *
-     * @param null $store
+     * @param string $store
      * @return mixed
      */
     public function getLatitudepayPaymentTerms($store = null)
     {
-        if($this->isLatitudepayEnabled()){
-            return $this->scopeConfig->getValue('payment/latitudepay/payment_terms', \Magento\Store\Model\ScopeInterface::SCOPE_STORE, $store);
+        if ($this->isLatitudepayEnabled()) {
+            return $this->scopeConfig->getValue(
+                'payment/latitudepay/payment_terms',
+                \Magento\Store\Model\ScopeInterface::SCOPE_STORE,
+                $store
+            );
         }
         return null;
     }
@@ -247,7 +301,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
     /**
      * Get Image API URL.
      *
-     * @param null $store
+     * @param string $store
      * @return mixed
      */
     public function getImageApiUrl($store = null)
@@ -255,11 +309,16 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         if (isset($this->supportedCurrencyCodes[$this->currentCurrencyCode])) {
             $this->code = $this->supportedCurrencyCodes[$this->currentCurrencyCode];
         }
-        return $this->scopeConfig->getValue('payment/'.$this->code.'/image_api_url', \Magento\Store\Model\ScopeInterface::SCOPE_STORE, $store);
+        return $this->scopeConfig->getValue(
+            'payment/'.$this->code.'/image_api_url',
+            \Magento\Store\Model\ScopeInterface::SCOPE_STORE,
+            $store
+        );
     }
 
     /**
      * Retrieve util js
+     * 
      * @throws \Magento\Framework\Exception\LocalizedException
      * @return \Magento\Framework\Phrase
      */
@@ -271,6 +330,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
 
     /**
      * Retrieve snippet image url
+     * 
      * @throws \Magento\Framework\Exception\LocalizedException
      * @return \Magento\Framework\Phrase
      */
@@ -280,7 +340,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         return $this->getImageApiUrl().'/snippet.svg';
     }
 
-     /**
+    /**
      * If display billing address on payment page is available, otherwise should be display on payment method
      *
      * @return bool
@@ -288,38 +348,63 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
     public function isDisplayBillingOnPaymentPageAvailable(): bool
     {
         return (bool)$this->scopeConfig->getValue(
-            'checkout/options/display_billing_address_on',  //Configuration value of whether to display billing address on payment method or payment page
+            //Configuration value of whether to display billing address on payment method or payment page
+            'checkout/options/display_billing_address_on',
             \Magento\Store\Model\ScopeInterface::SCOPE_STORE
         );
     }
 
+    /**
+     * Get LC script
+     */
     public function getScriptURL()
     {
         $isTest = (boolean)($this->getConfigData('test_mode', null, 'latitude') === '1');
-        $host = $isTest ? 
-            'https://develop.checkout.dev.merchant-services-np.lfscnp.com' 
-            : 
+        
+        $host = $isTest ?
+            'https://develop.checkout.dev.merchant-services-np.lfscnp.com'
+            :
             'https://checkout.latitudefinancial.com';
-        return $host. "/assets/content.js?platform=magento2&merchantId=".$this->getConfigData('merchant_id', null, 'latitude');
+
+        return $host. 
+        "/assets/content.js?platform=magento2&merchantId=".
+        $this->getConfigData('merchant_id', null, 'latitude');
     }
 
+    /**
+     * Generic Curl setup
+     * 
+     * @param string $url
+     * @param array $options
+     * @param array $headers
+     * @param array $credentials
+     * @param string $body
+     * @param boolean $isPost
+     * @param string $methodCode
+     */
     public function makecurlCall($url, $options, $headers, $credentials, $body, $isPost = true, $methodCode = null)
     {
         $this->log('*** Making CURL Request ***', $methodCode);
-        $this->log("Calling $url with POST: $isPost, headers: ".json_encode($headers).", credentials: ".implode(',',$credentials ? $credentials : array()).", and body: $body", $methodCode);
+        $this->log(
+            "Calling $url with POST: $isPost, headers: ".json_encode($headers).
+            ", credentials: ".implode(',', $credentials ? $credentials : []).
+            ", and body: $body", $methodCode
+        );
         
         $this->curl = $this->curlFactory->create();
-        try{
+        try {
             $this->curl->setHeaders($headers);
             $this->curl->setOptions($options);
 
-            if ($credentials !== false)
+            if ($credentials !== false) {
                 $this->curl->setCredentials($credentials[0], $credentials[1]);
+            }
 
-            if ($isPost)
-                $this->curl->post($url, $body !== null ? $body : array());
-            else
+            if ($isPost) {
+                $this->curl->post($url, $body !== null ? $body : []);
+            } else {
                 $this->curl->get($url);
+            }
                 
             $response = $this->curl->getBody();
             $status = $this->curl->getStatus();
@@ -339,7 +424,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
             $message = $e->getMessage();
             $this->log($message, $methodCode);
             $this->messageManager->addErrorMessage(__("Error making curl call to $url with error $message"));
-            throw new \Exception($e);
+            throw $e;
         }
     }
 }

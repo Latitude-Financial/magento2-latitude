@@ -9,10 +9,13 @@ use Magento\Framework\Data\Form\Element\AbstractElement;
 
 class Disable extends \Magento\Config\Block\System\Config\Form\Field
 {
-	// @codingStandardsIgnoreStart
+	/**
+     * Get Disabled html
+     * 
+     * @param AbstractElement $element
+     */
     protected function _getElementHtml(AbstractElement $element)
     {
-    // @codingStandardsIgnoreEnd
         $element->setDisabled('disabled');
         return $element->getElementHtml();
     }

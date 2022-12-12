@@ -21,14 +21,18 @@ Tested up to: Magento 2.4.5.
 
 ## Changelog
 
+### 3.0.8
+- 12 December 2022
+- Change status flow for capture to use custom status pending_latitude_capture, which is linked to processing state to avoid orders getting canceled by magento cron like in previous version where we used panding_payment
+
+<details>
+<summary>Older versions</summary>
+
 ### 3.0.7
 - 29 November 2022
 - Phpcs updates for marketplace
 - Capture logic update to work with M2's unexpected float values
 - Billing address form on IF checkout
-
-<details>
-<summary>Older versions</summary>
 
 ### 3.0.6
 - 16 November 2022

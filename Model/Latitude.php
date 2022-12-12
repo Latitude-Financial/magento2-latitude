@@ -246,7 +246,7 @@ class Latitude extends \Magento\Payment\Model\Method\AbstractMethod
         $transId = $payment->getParentTransactionId();
         $gatewayReference = $payment->getAdditionalInformation('gateway_reference');
 
-        if ($order->getStatus() !== \Magento\Sales\Model\Order::STATE_PENDING_PAYMENT
+        if ($order->getStatus() !== 'pending_latitude_capture'
             && $order->getStatus() !== \Magento\Sales\Model\Order::STATE_PROCESSING
             && $order->getStatus() !== 'pending_latitude_approval'
             ) {

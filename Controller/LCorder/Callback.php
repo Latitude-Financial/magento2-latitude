@@ -148,7 +148,7 @@ class Callback extends \Magento\Framework\App\Action\Action
     {
         $this->helper->log('****** SAVING LC DEFERRED/AUTHORIZATION TRANSACTION ******', 'latitude');
         //change state from new to processing
-        $order->setState(\Magento\Sales\Model\Order::STATE_PENDING_PAYMENT);
+        $order->setState(\Magento\Sales\Model\Order::STATE_PROCESSING);
        
         //Set transaction id
         $payment = $order->getPayment();
@@ -171,7 +171,7 @@ class Callback extends \Magento\Framework\App\Action\Action
         // $latitudeRef = $order->getCustomerNote();
         //add comment along and update status to processing
         $order->addStatusToHistory(
-            \Magento\Sales\Model\Order::STATE_PENDING_PAYMENT,  //status
+            'pending_latitude_capture',  //status
             "Latitude Checkout DEFERRED payment of $".$verifyResponse->amount.
             " Result: ".$verifyResponse->result.
             " Transaction Ref: ".$verifyResponse->transactionReference.

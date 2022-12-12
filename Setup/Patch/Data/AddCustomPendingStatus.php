@@ -3,7 +3,7 @@ namespace LatitudeNew\Payment\Setup\Patch\Data;
 
 use Magento\Framework\Setup\Patch\DataPatchInterface;
 
-class UpdateOrderStatuses implements DataPatchInterface
+class AddCustomPendingStatus implements DataPatchInterface
 {
    /**
     * @var \Magento\Framework\Setup\ModuleDataSetupInterface

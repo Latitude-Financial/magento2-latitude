@@ -34,7 +34,7 @@ class AddCustomAuthorizedStatus implements DataPatchInterface
         // use insertOnDuplicate(), insertArray() etc here
         $this->moduleDataSetup->getConnection()->insertOnDuplicate(
             $this->moduleDataSetup->getTable('sales_order_status'),
-            ['status' => 'pending_latitude_capture', 'label' => 'Pending Latitude Capture']
+            ['status' => 'pending_latitude_capture', 'label' => 'Pending Capture']
         );
 
         $this->helper->log('STATUS pending_latitude_capture successfully added to sales_order_status');

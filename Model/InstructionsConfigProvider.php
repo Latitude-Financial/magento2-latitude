@@ -138,8 +138,8 @@ class InstructionsConfigProvider implements ConfigProviderInterface
     {
         $lpayinstallmentBlock = '<img class="lpay_snippet" src="'.$this->getSnippetImage().'" alt="LatitudePay" >';
         $gpayinstallmentBlock = '<img class="lpay_snippet" src="'.$this->getSnippetImage().'" alt="GenoaPay" >';
-        $lcLogoUrl = 'https://resources.latitudefinancial.com/img/interest-free/logos/';
-        $lcLogoFileName = $this->helper->getStoreCurrency() === 'AUD' ? 'lfs-lock-up.svg' : 'GEM-IF-LOGO.svg';
+        $lcLogoUrl = 'https://images.latitudepayapps.com/images/interest-free/';
+        $lcLogoFileName = $this->helper->getStoreCurrency() === 'AUD' ? 'if-logo.svg' : 'gem-logo.svg';
 
         /** @noinspection PhpUndefinedMethodInspection */
         /** @noinspection PhpUndefinedMethodInspection */

@@ -21,12 +21,17 @@ Tested up to: Magento 2.4.5.
 
 ## Changelog
 
-### 3.0.8
-- 12 December 2022
-- Change status flow for capture to use custom status pending_latitude_capture, which is linked to processing state to avoid orders getting canceled by magento cron like in previous version where we used panding_payment
+### 3.0.9
+- 23 February 2023
+- Logo migration
+- Update widget's non-prod url for if
 
 <details>
 <summary>Older versions</summary>
+
+### 3.0.8
+- 12 December 2022
+- Change status flow for capture to use custom status pending_latitude_capture, which is linked to processing state to avoid orders getting canceled by magento cron like in previous version where we used panding_payment
 
 ### 3.0.7
 - 29 November 2022

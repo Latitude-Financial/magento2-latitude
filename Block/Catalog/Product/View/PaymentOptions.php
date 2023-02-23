@@ -225,7 +225,7 @@ class PaymentOptions extends \Magento\Framework\View\Element\Template
     {
         $isTest = (boolean)($this->helper->getConfigData('test_mode', null, 'latitude') === '1');
         return $isTest ?
-            'https://develop.checkout.dev.merchant-services-np.lfscnp.com'
+            'https://develop.checkout.test.merchant-services-np.lfscnp.com'
             :
             'https://checkout.latitudefinancial.com';
     }

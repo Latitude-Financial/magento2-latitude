@@ -362,7 +362,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         $isTest = (boolean)($this->getConfigData('test_mode', null, 'latitude') === '1');
         
         $host = $isTest ?
-            'https://develop.checkout.dev.merchant-services-np.lfscnp.com'
+            'https://develop.checkout.test.merchant-services-np.lfscnp.com'
             :
             'https://checkout.latitudefinancial.com';
 

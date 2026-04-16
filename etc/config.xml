@@ -14,7 +14,7 @@
                 <active>0</active>
                 <order_status>pending_latitude_approval</order_status>
                 <title>LatitudePay</title>
-                <version>3.0.9</version>
+                <version>3.0.10</version>
                 <can_use_checkout>1</can_use_checkout>
                 <payment_action>true</payment_action>
                 <line_items_enabled>1</line_items_enabled>
@@ -79,7 +79,7 @@
                 <debug_mode>1</debug_mode>
                 <order_status>pending_latitude_approval</order_status>
                 <payment_action>sale</payment_action>
-                <title>Latitude Interest Free</title>
+                <title>Latitude</title>
                 <allowspecific>1</allowspecific>
                 <specificcountry>AU,NZ</specificcountry>
                 <api_url_production>https://api.latitudefinancial.com/v1/applybuy-checkout-service</api_url_production>

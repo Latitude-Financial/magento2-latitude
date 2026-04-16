@@ -82,6 +82,11 @@ class InstructionsConfigProvider implements ConfigProviderInterface
      */
     protected $currency;
 
+     /**
+     * @var \LatitudeNew\Payment\Helper\Data
+     */
+    protected $helper;
+
     /**
      * Construct
      * 

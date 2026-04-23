@@ -88,6 +88,11 @@ class InstructionsConfigProvider implements ConfigProviderInterface
     protected $helper;
 
     /**
+     * @var \LatitudeNew\Payment\Helper\Data
+     */
+    protected $helper;
+
+    /**
      * Construct
      * 
      * @param PaymentHelper $paymentHelper

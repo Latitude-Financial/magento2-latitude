@@ -35,6 +35,8 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
      */
     private $curlFactory;
 
+    private \Magento\Sales\Model\OrderFactory $getOrderFactory;
+
     /**
      * @var \LatitudeNew\Payment\Logger\Logger
      */

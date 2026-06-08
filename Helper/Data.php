@@ -41,6 +41,11 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
     protected $logger;
 
     /**
+     * @var \Magento\Sales\Model\OrderFactory
+     */
+    protected $getOrderFactory;
+
+    /**
      * Payment method code
      *
      * @var string

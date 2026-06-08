@@ -23,7 +23,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
     /**
      * @var \Magento\Sales\Model\OrderFactory
      */
-    protected $orderFactoryCreate;
+    private \Magento\Sales\Model\OrderFactory $orderFactory;
 
     /**
      * @var \Magento\Framework\Message\ManagerInterface
@@ -34,8 +34,6 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
      * @var \Magento\Framework\HTTP\Adapter\CurlFactory
      */
     private $curlFactory;
-
-    private \Magento\Sales\Model\OrderFactory $getOrderFactory;
 
     /**
      * @var \LatitudeNew\Payment\Logger\Logger
@@ -79,8 +77,8 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
      *
      * @param \Magento\Store\Model\StoreManagerInterface $storeManager
      * @param \Magento\Framework\Message\ManagerInterface $messageManager
-     * @param \Magento\Sales\Model\OrderFactory $orderFactoryCreate
-     * @param \Magento\Framework\HTTP\Adapter\CurlFactory $curlFactory
+     * @param \Magento\Sales\Model\OrderFactory $orderFactory
+     * @param \Magento\Framework\HTTP\Client\CurlFactory $curlFactory
      * @param \LatitudeNew\Payment\Logger\Logger $logger
      * @param \Magento\Framework\App\Helper\Context $context
      * @param \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig
@@ -88,7 +86,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
     public function __construct(
         \Magento\Store\Model\StoreManagerInterface $storeManager,
         \Magento\Framework\Message\ManagerInterface $messageManager,
-        \Magento\Sales\Model\OrderFactory $orderFactoryCreate,
+        \Magento\Sales\Model\OrderFactory $orderFactory,
         \Magento\Framework\HTTP\Client\CurlFactory $curlFactory,
         \LatitudeNew\Payment\Logger\Logger $logger,
         \Magento\Framework\App\Helper\Context $context,
@@ -98,7 +96,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
 
         $this->storeManager = $storeManager;
         $this->scopeConfig = $scopeConfig;
-        $this->getOrderFactory = $orderFactoryCreate;
+        $this->orderFactory = $orderFactory;
         $this->messageManager = $messageManager;
         $this->curlFactory = $curlFactory;
         $this->logger = $logger;
@@ -250,7 +248,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
      */
     public function getOrderByIncrementId($incrementId)
     {
-        $orderobj = $this->getOrderFactory->create()->loadByIncrementId($incrementId);
+        $orderobj = $this->orderFactory->create()->loadByIncrementId($incrementId);
         return $orderobj;
     }
 
